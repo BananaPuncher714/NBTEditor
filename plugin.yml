@@ -1,0 +1,7 @@
+name: NBTEditor
+main: io.github.bananapuncher714.nbteditor.NBTEditorMain
+version: 5.0
+author: BananaPuncher714
+commands:
+    nbteditor:
+        description: Does stuff
