@@ -26,26 +26,26 @@ import com.mojang.authlib.properties.Property;
 /**
  * Sets/Gets NBT tags from ItemStacks 
  * 
- * @version 5.0
+ * @version 6.0
  * @author BananaPuncher714
  */
 public class NBTEditor {
-	private static HashMap< String, Class<?> > classCache;
-	private static HashMap< String, Method > methodCache;
-	private static HashMap< Class< ? >, Constructor< ? > > constructorCache;
-	private static HashMap< Class< ? >, Class< ? > > NBTClasses;
-	private static HashMap< Class< ? >, Field > NBTTagFieldCache;
+	private static final Map< String, Class<?> > classCache;
+	private static final Map< String, Method > methodCache;
+	private static final Map< Class< ? >, Constructor< ? > > constructorCache;
+	private static final Map< Class< ? >, Class< ? > > NBTClasses;
+	private static final Map< Class< ? >, Field > NBTTagFieldCache;
 	private static Field NBTListData;
 	private static Field NBTCompoundMap;
-	private static String version;
+	private static final String version;
 
 	static {
 		version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
 
 		classCache = new HashMap< String, Class<?> >();
 		try {
-			classCache.put( "NBTBase", Class.forName("net.minecraft.server." + version + "." + "NBTBase" ) );
-			classCache.put( "NBTTagCompound", Class.forName("net.minecraft.server." + version + "." + "NBTTagCompound" ) );
+			classCache.put( "NBTBase", Class.forName( "net.minecraft.server." + version + "." + "NBTBase" ) );
+			classCache.put( "NBTTagCompound", Class.forName( "net.minecraft.server." + version + "." + "NBTTagCompound" ) );
 			classCache.put( "NBTTagList", Class.forName( "net.minecraft.server." + version + "." + "NBTTagList" ) );
 			classCache.put( "NBTBase", Class.forName( "net.minecraft.server." + version + "." + "NBTBase" ) );
 
@@ -218,7 +218,12 @@ public class NBTEditor {
 	}
 
 	public final static ItemStack getHead( String skinURL ) {
-		ItemStack head = new ItemStack( Material.SKULL_ITEM, 1, ( short ) 3 );
+		Material material = Material.getMaterial( "SKULL_ITEM" );
+		if ( material == null ) {
+			// Most likely 1.13 materials
+			material = Material.getMaterial( "PLAYER_HEAD" );
+		}
+		ItemStack head = new ItemStack( material, 1, ( short ) 3 );
 		if ( skinURL == null || skinURL.isEmpty() ) {
 			return head;
 		}
@@ -507,13 +512,16 @@ public class NBTEditor {
 	}
 
 	private static Object getTag( Object tag, Object... keys ) throws Exception {
-		if ( keys.length == 0 ) return getTags( tag );
+		if ( keys.length == 0 ) {
+			return getTags( tag );
+		}
 
 		Object notCompound = tag;
 
 		for ( Object key : keys ) {
-			if ( notCompound == null ) return null;
-			if ( getNMSClass( "NBTTagCompound" ).isInstance( notCompound ) ) {
+			if ( notCompound == null ) {
+				return null;
+			} else if ( getNMSClass( "NBTTagCompound" ).isInstance( notCompound ) ) {
 				notCompound = getMethod( "get" ).invoke( notCompound, ( String ) key );
 			} else if ( getNMSClass( "NBTTagList" ).isInstance( notCompound ) ) {
 				notCompound = ( ( List< ? > ) NBTListData.get( notCompound ) ).get( ( int ) key );
@@ -521,8 +529,9 @@ public class NBTEditor {
 				return getNBTVar( notCompound );
 			}
 		}
-		if ( notCompound == null ) return null;
-		if ( getNMSClass( "NBTTagList" ).isInstance( notCompound ) ) {
+		if ( notCompound == null ) {
+			return null;
+		} else if ( getNMSClass( "NBTTagList" ).isInstance( notCompound ) ) {
 			return getTags( notCompound );
 		} else if ( getNMSClass( "NBTTagCompound" ).isInstance( notCompound ) ) {
 			return getTags( notCompound );
@@ -538,14 +547,18 @@ public class NBTEditor {
 				Map< String, Object > tagCompound = ( Map< String, Object > ) NBTCompoundMap.get( tag );
 				for ( String key : tagCompound.keySet() ) {
 					Object value = tagCompound.get( key );
-					if ( getNMSClass( "NBTTagEnd" ).isInstance( value ) ) continue;
+					if ( getNMSClass( "NBTTagEnd" ).isInstance( value ) ) {
+						continue;
+					}
 					tags.put( key, getTag( value ) );
 				}
 			} else if ( getNMSClass( "NBTTagList" ).isInstance( tag ) ) {
 				List< Object > tagList = ( List< Object > ) NBTListData.get( tag );
 				for ( int index = 0; index < tagList.size(); index++ ) {
 					Object value = tagList.get( index );
-					if ( getNMSClass( "NBTTagEnd" ).isInstance( value ) ) continue;
+					if ( getNMSClass( "NBTTagEnd" ).isInstance( value ) ) {
+						continue;
+					}
 					tags.put( index, getTag( value ) );
 				}
 			} else {
