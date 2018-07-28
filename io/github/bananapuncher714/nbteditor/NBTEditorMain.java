@@ -29,6 +29,9 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 			if ( block.getType() == Material.CHEST ) {
 				NBTEditor.setBlockTag( block, "Notch", "Lock" );
 				player.sendMessage( "Set lock to 'Notch'" );
+			} else if ( block.getType() == Material.MOB_SPAWNER ) {
+				NBTEditor.setBlockTag( block, 25f, "SpawnRange");
+				player.sendMessage( "Changed SpawnRange to 25f" );
 			}
 		}
 		return false;
