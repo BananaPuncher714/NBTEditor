@@ -26,7 +26,7 @@ import com.mojang.authlib.properties.Property;
 /**
  * Sets/Gets NBT tags from ItemStacks 
  * 
- * @version 6.3
+ * @version 6.4
  * @author BananaPuncher714
  */
 public class NBTEditor {
