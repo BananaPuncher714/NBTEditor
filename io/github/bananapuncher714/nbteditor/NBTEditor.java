@@ -287,6 +287,9 @@ public class NBTEditor {
 	 * The item represented by the keys, and an integer if it is showing how long a list is.
 	 */
 	public static Object getItemTag( ItemStack item, Object... keys ) {
+		if ( item == null ) {
+			return null;
+		}
 		try {
 			Object stack = null;
 			stack = getMethod( "asNMSCopy" ).invoke( null, item );
@@ -319,6 +322,9 @@ public class NBTEditor {
 	 * A new ItemStack with the updated NBT tags
 	 */
 	public static ItemStack setItemTag( ItemStack item, Object value, Object... keys ) {
+		if ( item == null ) {
+			return null;
+		}
 		try {
 			Object stack = getMethod( "asNMSCopy" ).invoke( null, item );
 
@@ -351,6 +357,9 @@ public class NBTEditor {
 	 * The item represented by the keys, and an integer if it is showing how long a list is.
 	 */
 	public static Object getEntityTag( Entity entity, Object... keys ) {
+		if ( entity == null ) {
+			return entity;
+		}
 		try {
 			Object NMSEntity = getMethod( "getEntityHandle" ).invoke( entity );
 
@@ -378,6 +387,9 @@ public class NBTEditor {
 	 * A new ItemStack with the updated NBT tags
 	 */
 	public static void setEntityTag( Entity entity, Object value, Object... keys ) {
+		if ( entity == null ) {
+			return;
+		}
 		try {
 			Object NMSEntity = getMethod( "getEntityHandle" ).invoke( entity );
 
@@ -443,6 +455,9 @@ public class NBTEditor {
 	 */
 	public static void setBlockTag( Block block, Object value, Object... keys ) {
 		try {
+			if ( !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
+				return;
+			}
 			Location location = block.getLocation();
 
 			Object blockPosition = getConstructor( getNMSClass( "BlockPosition" ) ).newInstance( location.getBlockX(), location.getBlockY(), location.getBlockZ() );
@@ -549,6 +564,7 @@ public class NBTEditor {
 		}
 	}
 
+	@SuppressWarnings( "unchecked" )
 	private static Object getTags( Object tag ) {
 		Map< Object, Object > tags = new HashMap< Object, Object >();
 		try {
