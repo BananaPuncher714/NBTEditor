@@ -26,7 +26,7 @@ import com.mojang.authlib.properties.Property;
 /**
  * Sets/Gets NBT tags from ItemStacks 
  * 
- * @version 6.2
+ * @version 6.3
  * @author BananaPuncher714
  */
 public class NBTEditor {
@@ -418,7 +418,9 @@ public class NBTEditor {
 			
 			Object tileEntity = getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
 
-			Object tag = getMethod( "getTileTag" ).invoke( tileEntity, getNMSClass( "NBTTagCompound" ).newInstance() );
+			Object tag = getNMSClass( "NBTTagCompound" ).newInstance();
+			
+			getMethod( "getTileTag" ).invoke( tileEntity, tag );
 
 			return getTag( tag, keys );
 		} catch( Exception exception ) {
@@ -548,7 +550,7 @@ public class NBTEditor {
 	}
 
 	private static Object getTags( Object tag ) {
-		HashMap< Object, Object > tags = new HashMap< Object, Object >();
+		Map< Object, Object > tags = new HashMap< Object, Object >();
 		try {
 			if ( getNMSClass( "NBTTagCompound" ).isInstance( tag ) ) {
 				Map< String, Object > tagCompound = ( Map< String, Object > ) NBTCompoundMap.get( tag );
