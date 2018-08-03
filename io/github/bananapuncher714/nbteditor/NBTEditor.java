@@ -26,7 +26,7 @@ import com.mojang.authlib.properties.Property;
 /**
  * Sets/Gets NBT tags from ItemStacks 
  * 
- * @version 6.4
+ * @version 6.5
  * @author BananaPuncher714
  */
 public class NBTEditor {
@@ -419,7 +419,7 @@ public class NBTEditor {
 	 */
 	public static Object getBlockTag( Block block, Object... keys ) {
 		try {
-			if ( !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
+			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
 				return null;
 			}
 			Location location = block.getLocation();
@@ -455,7 +455,7 @@ public class NBTEditor {
 	 */
 	public static void setBlockTag( Block block, Object value, Object... keys ) {
 		try {
-			if ( !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
+			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
 				return;
 			}
 			Location location = block.getLocation();
