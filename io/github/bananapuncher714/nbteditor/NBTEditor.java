@@ -25,6 +25,7 @@ import com.mojang.authlib.properties.Property;
 
 /**
  * Sets/Gets NBT tags from ItemStacks 
+ * Supports 1.8-1.13
  * 
  * @version 6.5
  * @author BananaPuncher714
@@ -100,7 +101,7 @@ public class NBTEditor {
 			methodCache.put( "getEntityTag", getNMSClass( "Entity" ).getMethod( "c", getNMSClass( "NBTTagCompound" ) ) );
 			methodCache.put( "setEntityTag", getNMSClass( "Entity" ).getMethod( "f", getNMSClass( "NBTTagCompound" ) ) );
 
-			if ( version.contains( "1_12" ) ) {
+			if ( version.contains( "1_12" ) || version.contains( "1_13" ) ) {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "load", getNMSClass( "NBTTagCompound" ) ) );
 			} else {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "a", getNMSClass( "NBTTagCompound" ) ) );
