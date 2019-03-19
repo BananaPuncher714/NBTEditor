@@ -27,7 +27,7 @@ import com.mojang.authlib.properties.Property;
  * Sets/Gets NBT tags from ItemStacks 
  * Supports 1.8-1.13
  * 
- * @version 7.0
+ * @version 7.2
  * @author BananaPuncher714
  */
 public class NBTEditor {
@@ -315,6 +315,16 @@ public class NBTEditor {
 		}
 	}
 
+	/**
+	 * Gets an NBTCompound from the item provided
+	 * 
+	 * @param item
+	 * Itemstack
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * An NBTCompound
+	 */
 	public static NBTCompound getItemNBTTag( ItemStack item, Object... keys ) {
 		if ( item == null ) {
 			return null;
@@ -431,6 +441,16 @@ public class NBTEditor {
 		}
 	}
 	
+	/**
+	 * Gets an NBTCompound from the entity provided
+	 * 
+	 * @param entity
+	 * The Bukkit entity provided
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * An NBTCompound
+	 */
 	public static NBTCompound getEntityNBTTag( Entity entity, Object...keys ) {
 		if ( entity == null ) {
 			return null;
@@ -516,6 +536,16 @@ public class NBTEditor {
 		}
 	}
 	
+	/**
+	 * Gets an NBTCompound from the block provided
+	 * 
+	 * @param block
+	 * The block provided
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * An NBTCompound
+	 */
 	public static Object getBlockNBTTag( Block block, Object... keys ) {
 		try {
 			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
@@ -731,6 +761,9 @@ public class NBTEditor {
 		}
 	}
 	
+	/**
+	 * A class for holding NBTTagCompounds
+	 */
 	public static final class NBTCompound {
 		protected final Object tag;
 		
