@@ -29,7 +29,7 @@ import com.mojang.authlib.properties.Property;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/single-class-nbt-editor-for-items-skulls-mobs-and-tile-entities-1-8-1-13.269621/
  * 
- * @version 7.3
+ * @version 7.4
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -905,10 +905,12 @@ public final class NBTEditor {
 	 * The value to set, can be an NBTCompound
 	 * @param keys
 	 * The keys in descending order
+	 * @return
+	 * The new item stack if the object provided is an item, else original object
 	 */
-	public final static void set( Object object, Object value, Object... keys ) {
+	public final static < T > T set( T object, Object value, Object... keys ) {
 		if ( object instanceof ItemStack ) {
-			setItemTag( ( ItemStack ) object, value, keys );
+			return ( T ) setItemTag( ( ItemStack ) object, value, keys );
 		} else if ( object instanceof Entity ) {
 			setEntityTag( ( Entity ) object, value, keys );
 		} else if ( object instanceof Block ) {
@@ -916,6 +918,7 @@ public final class NBTEditor {
 		} else {
 			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
 		}
+		return object;
 	}
 
 	private static void setTag( Object tag, Object value, Object... keys ) throws Exception {

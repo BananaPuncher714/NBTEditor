@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -25,7 +26,7 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 
 	@Override
 	public void onEnable() {
-//		Bukkit.getPluginManager().registerEvents( this, this );
+		Bukkit.getPluginManager().registerEvents( this, this );
 	}
 
 	@Override
@@ -37,16 +38,16 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 				if ( block.getState() instanceof InventoryHolder ) {
 					String rand = String.valueOf( ThreadLocalRandom.current().nextInt( 8999999 ) + 1000000 );
 					String legacized = legacyEncode( rand );
-					NBTEditor.setBlockTag( block, ChatColor.RESET + "Key" + legacized, "Lock" );
+					NBTEditor.set( block, ChatColor.RESET + "Key" + legacized, "Lock" );
 					player.sendMessage( "Set lock to '" + rand + "'" );
-					player.sendMessage( "" + NBTEditor.getBlockTag( block, "Lock" ) );
+					player.sendMessage( "" + NBTEditor.getString( block, "Lock" ) );
 					ItemStack item = new ItemStack( Material.TRIPWIRE_HOOK );
 					ItemMeta meta = item.getItemMeta();
 					meta.setDisplayName( ChatColor.RESET + "Key" + legacized );
 					item.setItemMeta( meta );
 					player.getInventory().addItem( item );
 				} else if ( block.getType() == Material.MOB_SPAWNER ) {
-					NBTEditor.setBlockTag( block, 25f, "SpawnRange");
+					NBTEditor.set( block, 25f, "SpawnRange");
 					player.sendMessage( "Changed SpawnRange to 25f" );
 				}
 			} else if ( args.length == 1 ) {
@@ -67,8 +68,8 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 								}
 							}
 							if ( enchantments.size() < 2 ) {
-								item = NBTEditor.setItemTag( item, 2, "ench", null, "id" );
-								item = NBTEditor.setItemTag( item, ( short ) 3, "ench", 1, "lvl" );
+								item = NBTEditor.set( item, 2, "ench", null, "id" );
+								item = NBTEditor.set( item, ( short ) 3, "ench", 1, "lvl" );
 								player.setItemInHand( item );
 							}
 						} else {
@@ -78,9 +79,9 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 				} else if ( args[ 0 ].equalsIgnoreCase( "settag" ) ) {
 					ItemStack item = player.getItemInHand();
 					if ( item != null ) {
-						item = NBTEditor.setItemTag( item, "A VALUE", "test", "value" );
+						item = NBTEditor.set( item, "A VALUE", "test", "value" );
 						player.setItemInHand( item );
-						player.sendMessage( "" + NBTEditor.getItemTag( item, "test", "value" ) );
+						player.sendMessage( "" + NBTEditor.getString( item, "test", "value" ) );
 					}
 				}
 			}
@@ -90,19 +91,21 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPlayerInteractEvent( PlayerInteractAtEntityEvent event ) {
+		if ( event.getHand() != EquipmentSlot.HAND ) {
+			return;
+		}
 		Entity entity = event.getRightClicked();
-		Object ai = NBTEditor.getEntityTag( entity, "NoAI" );
 		byte noAi;
-		if ( ai == null ) {
+		if ( !NBTEditor.contains( entity, "NoAI" ) ) {
 			noAi = 0;
 		} else {
-			noAi = ( byte ) ai;
+			noAi = NBTEditor.getByte( entity, "NoAI" );
 		}
 		event.getPlayer().sendMessage( "Set NoAI to " + noAi );
 		if ( noAi == 1 ) {
-			NBTEditor.setEntityTag( entity, ( byte ) 0, "NoAI" );
+			NBTEditor.set( entity, ( byte ) 0, "NoAI" );
 		} else {
-			NBTEditor.setEntityTag( entity, ( byte ) 1, "NoAI" );
+			NBTEditor.set( entity, ( byte ) 1, "NoAI" );
 		}
 	}
 	
