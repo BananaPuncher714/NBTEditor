@@ -19,7 +19,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.google.common.primitives.Primitives;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 
@@ -27,10 +26,13 @@ import com.mojang.authlib.properties.Property;
  * Sets/Gets NBT tags from ItemStacks 
  * Supports 1.8-1.13
  * 
- * @version 7.2
+ * Github: https://github.com/BananaPuncher714/NBTEditor
+ * Spigot: https://www.spigotmc.org/threads/single-class-nbt-editor-for-items-skulls-mobs-and-tile-entities-1-8-1-13.269621/
+ * 
+ * @version 7.3
  * @author BananaPuncher714
  */
-public class NBTEditor {
+public final class NBTEditor {
 	private static final Map< String, Class<?> > classCache;
 	private static final Map< String, Method > methodCache;
 	private static final Map< Class< ? >, Constructor< ? > > constructorCache;
@@ -167,17 +169,13 @@ public class NBTEditor {
 		}
 	}
 
-	public static Class<?> getPrimitiveClass( Class<?> clazz ) {
-		return Primitives.unwrap( clazz );
-	}
-
-	public static Class< ? > getNBTTag( Class< ? > primitiveType ) {
+	private static Class< ? > getNBTTag( Class< ? > primitiveType ) {
 		if ( NBTClasses.containsKey( primitiveType ) )
 			return NBTClasses.get( primitiveType );
 		return primitiveType;
 	}
 
-	public static Object getNBTVar( Object object ) {
+	private static Object getNBTVar( Object object ) {
 		if ( object == null ) {
 			return null;
 		}
@@ -192,15 +190,15 @@ public class NBTEditor {
 		return null;
 	}
 
-	public static Method getMethod( String name ) {
+	private static Method getMethod( String name ) {
 		return methodCache.containsKey( name ) ? methodCache.get( name ) : null;
 	}
 
-	public static Constructor< ? > getConstructor( Class< ? > clazz ) {
+	private static Constructor< ? > getConstructor( Class< ? > clazz ) {
 		return constructorCache.containsKey( clazz ) ? constructorCache.get( clazz ) : null;
 	}
 
-	public static Class<?> getNMSClass(String name) {
+	private static Class<?> getNMSClass(String name) {
 		if ( classCache.containsKey( name ) ) {
 			return classCache.get( name );
 		}
@@ -213,7 +211,7 @@ public class NBTEditor {
 		}
 	}
 	
-	public static String getMatch( String string, String regex ) {
+	private static String getMatch( String string, String regex ) {
 		Pattern pattern = Pattern.compile( regex );
 		Matcher matcher = pattern.matcher( string );
 		if ( matcher.find() ) {
@@ -222,7 +220,25 @@ public class NBTEditor {
 			return null;
 		}
 	}
+	
+	/**
+	 * Gets the Bukkit version
+	 * 
+	 * @return
+	 * The Bukkit version in standard package format
+	 */
+	public final static String getVersion() {
+		return VERSION;
+	}
 
+	/**
+	 * Creates a skull with the given url as the skin
+	 * 
+	 * @param skinURL
+	 * The URL of the skin, must be from mojang
+	 * @return
+	 * An item stack with count of 1
+	 */
 	public final static ItemStack getHead( String skinURL ) {
 		Material material = Material.getMaterial( "SKULL_ITEM" );
 		if ( material == null ) {
@@ -253,6 +269,14 @@ public class NBTEditor {
 		return head;
 	}
 	
+	/**
+	 * Fetches the texture of a skull
+	 * 
+	 * @param head
+	 * The item stack itself
+	 * @return
+	 * The URL of the texture
+	 */
 	public final static String getTexture( ItemStack head ) {
 		ItemMeta meta = head.getItemMeta();
 		Field profileField = null;
@@ -260,6 +284,7 @@ public class NBTEditor {
 			profileField = meta.getClass().getDeclaredField("profile");
 		} catch ( NoSuchFieldException | SecurityException e ) {
 			e.printStackTrace();
+			throw new IllegalArgumentException( "Item is not a player skull!" );
 		}
 		profileField.setAccessible(true);
 		try {
@@ -282,6 +307,8 @@ public class NBTEditor {
 	}
 
 	/**
+	 * @deprecated
+	 * 
 	 * Gets an NBT tag in a given item with the specified keys
 	 * 
 	 * @param item
@@ -292,7 +319,7 @@ public class NBTEditor {
 	 * @return
 	 * The item represented by the keys, and an integer if it is showing how long a list is.
 	 */
-	public static Object getItemTag( ItemStack item, Object... keys ) {
+	public final static Object getItemTag( ItemStack item, Object... keys ) {
 		if ( item == null ) {
 			return null;
 		}
@@ -325,7 +352,7 @@ public class NBTEditor {
 	 * @return
 	 * An NBTCompound
 	 */
-	public static NBTCompound getItemNBTTag( ItemStack item, Object... keys ) {
+	public final static NBTCompound getItemNBTTag( ItemStack item, Object... keys ) {
 		if ( item == null ) {
 			return null;
 		}
@@ -353,6 +380,8 @@ public class NBTEditor {
 	}
 	
 	/**
+	 * @deprecated
+	 * 
 	 * Sets an NBT tag in an item with the provided keys and value
 	 * 
 	 * @param item
@@ -364,7 +393,7 @@ public class NBTEditor {
 	 * @return
 	 * A new ItemStack with the updated NBT tags
 	 */
-	public static ItemStack setItemTag( ItemStack item, Object value, Object... keys ) {
+	public final static ItemStack setItemTag( ItemStack item, Object value, Object... keys ) {
 		if ( item == null ) {
 			return null;
 		}
@@ -388,7 +417,15 @@ public class NBTEditor {
 		}
 	}
 	
-	public static ItemStack getItemFromTag( NBTCompound compound ) {
+	/**
+	 * Constructs an ItemStack from a given NBTCompound
+	 * 
+	 * @param compound
+	 * An NBTCompound following an ItemStack structure
+	 * @return
+	 * A new ItemStack
+	 */
+	public final static ItemStack getItemFromTag( NBTCompound compound ) {
 		if ( compound == null ) {
 			return null;
 		}
@@ -413,6 +450,8 @@ public class NBTEditor {
 	}
 
 	/**
+	 * @deprecated
+	 * 
 	 * Gets an NBT tag in a given entity with the specified keys
 	 * 
 	 * @param block
@@ -423,7 +462,7 @@ public class NBTEditor {
 	 * @return
 	 * The item represented by the keys, and an integer if it is showing how long a list is.
 	 */
-	public static Object getEntityTag( Entity entity, Object... keys ) {
+	public final static Object getEntityTag( Entity entity, Object... keys ) {
 		if ( entity == null ) {
 			return entity;
 		}
@@ -451,7 +490,7 @@ public class NBTEditor {
 	 * @return
 	 * An NBTCompound
 	 */
-	public static NBTCompound getEntityNBTTag( Entity entity, Object...keys ) {
+	public final static NBTCompound getEntityNBTTag( Entity entity, Object...keys ) {
 		if ( entity == null ) {
 			return null;
 		}
@@ -470,6 +509,8 @@ public class NBTEditor {
 	}
 
 	/**
+	 * @deprecated
+	 * 
 	 * Sets an NBT tag in an entity with the provided keys and value
 	 * 
 	 * @param item
@@ -481,7 +522,7 @@ public class NBTEditor {
 	 * @return
 	 * A new ItemStack with the updated NBT tags
 	 */
-	public static void setEntityTag( Entity entity, Object value, Object... keys ) {
+	public final static void setEntityTag( Entity entity, Object value, Object... keys ) {
 		if ( entity == null ) {
 			return;
 		}
@@ -502,6 +543,8 @@ public class NBTEditor {
 	}
 
 	/**
+	 * @deprecated
+	 * 
 	 * Gets an NBT tag in a given block with the specified keys
 	 * 
 	 * @param block
@@ -512,7 +555,7 @@ public class NBTEditor {
 	 * @return
 	 * The item represented by the keys, and an integer if it is showing how long a list is.
 	 */
-	public static Object getBlockTag( Block block, Object... keys ) {
+	public final static Object getBlockTag( Block block, Object... keys ) {
 		try {
 			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
 				return null;
@@ -546,7 +589,7 @@ public class NBTEditor {
 	 * @return
 	 * An NBTCompound
 	 */
-	public static Object getBlockNBTTag( Block block, Object... keys ) {
+	public final static Object getBlockNBTTag( Block block, Object... keys ) {
 		try {
 			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
 				return null;
@@ -571,6 +614,8 @@ public class NBTEditor {
 	}
 
 	/**
+	 * @deprecated
+	 * 
 	 * Sets an NBT tag in an block with the provided keys and value
 	 * 
 	 * @param item
@@ -582,7 +627,7 @@ public class NBTEditor {
 	 * @return
 	 * A new ItemStack with the updated NBT tags
 	 */
-	public static void setBlockTag( Block block, Object value, Object... keys ) {
+	public final static void setBlockTag( Block block, Object value, Object... keys ) {
 		try {
 			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
 				return;
@@ -608,7 +653,15 @@ public class NBTEditor {
 		}
 	}
 	
-	public static void setSkullTexture( Block block, String texture ) {
+	/**
+	 * Sets the texture of a skull block
+	 * 
+	 * @param block
+	 * The block, must be a skull
+	 * @param texture
+	 * The URL of the skin
+	 */
+	public final static void setSkullTexture( Block block, String texture ) {
 		GameProfile profile = new GameProfile( UUID.randomUUID(), null );
 		profile.getProperties().put( "textures", new com.mojang.authlib.properties.Property( "textures", new String( Base64.encodeBase64( String.format( "{textures:{SKIN:{\"url\":\"%s\"}}}", texture ).getBytes() ) ) ) );
 		
@@ -624,6 +677,244 @@ public class NBTEditor {
 			getMethod( "setGameProfile" ).invoke( tileEntity, profile );
 		} catch( Exception exception ) {
 			exception.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Gets a string from an object
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * A string, or null if none is stored at the provided location
+	 */
+	public final static String getString( Object object, Object... keys ) {
+		Object result;
+		if ( object instanceof ItemStack ) {
+			result = getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			result = getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			result = getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+		return result instanceof String ? ( String ) result : null;
+	}
+	
+	/**
+	 * Gets an int from an object
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * An integer, or 0 if none is stored at the provided location
+	 */
+	public final static int getInt( Object object, Object... keys ) {
+		Object result;
+		if ( object instanceof ItemStack ) {
+			result = getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			result = getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			result = getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+		return result instanceof Integer ? ( int ) result : 0;
+	}
+	
+	/**
+	 * Gets a long from an object
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * A long, or 0 if none is stored at the provided location
+	 */
+	public final static long getLong( Object object, Object... keys ) {
+		Object result;
+		if ( object instanceof ItemStack ) {
+			result = getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			result = getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			result = getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+		return result instanceof Long ? ( long ) result : 0;
+	}
+	
+	/**
+	 * Gets a float from an object
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * A float, or 0 if none is stored at the provided location
+	 */
+	public final static float getFloat( Object object, Object... keys ) {
+		Object result;
+		if ( object instanceof ItemStack ) {
+			result = getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			result = getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			result = getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+		return result instanceof Float ? ( float ) result : 0;
+	}
+	
+	/**
+	 * Gets a short from an object
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * A short, or 0 if none is stored at the provided location
+	 */
+	public final static short getShort( Object object, Object... keys ) {
+		Object result;
+		if ( object instanceof ItemStack ) {
+			result = getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			result = getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			result = getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+		return result instanceof Short ? ( short ) result : 0;
+	}
+	
+	/**
+	 * Gets a byte from an object
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * A byte, or 0 if none is stored at the provided location
+	 */
+	public final static byte getByte( Object object, Object... keys ) {
+		Object result;
+		if ( object instanceof ItemStack ) {
+			result = getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			result = getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			result = getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+		return result instanceof Byte ? ( byte ) result : 0;
+	}
+	
+	/**
+	 * Gets a byte array from an object
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * A byte array, or null if none is stored at the provided location
+	 */
+	public final static byte[] getByteArray( Object object, Object... keys ) {
+		Object result;
+		if ( object instanceof ItemStack ) {
+			result = getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			result = getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			result = getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+		return result instanceof byte[] ? ( byte[] ) result : null;
+	}
+	
+	/**
+	 * Gets an int array from an object
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * An int array, or null if none is stored at the provided location
+	 */
+	public final static int[] getIntArray( Object object, Object... keys ) {
+		Object result;
+		if ( object instanceof ItemStack ) {
+			result = getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			result = getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			result = getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+		return result instanceof int[] ? ( int[] ) result : null;
+	}
+	
+	/**
+	 * Checks if the object contains the given key
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * Whether or not the particular tag exists, may not be a primitive
+	 */
+	public final static boolean contains( Object object, Object... keys ) {
+		Object result;
+		if ( object instanceof ItemStack ) {
+			result = getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			result = getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			result = getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+		return result != null;
+	}
+	
+	/**
+	 * Sets the value in the object with the given keys
+	 * 
+	 * @param object
+	 * Must be an ItemStack, Entity, or Block
+	 * @param value
+	 * The value to set, can be an NBTCompound
+	 * @param keys
+	 * The keys in descending order
+	 */
+	public final static void set( Object object, Object value, Object... keys ) {
+		if ( object instanceof ItemStack ) {
+			setItemTag( ( ItemStack ) object, value, keys );
+		} else if ( object instanceof Entity ) {
+			setEntityTag( ( Entity ) object, value, keys );
+		} else if ( object instanceof Block ) {
+			setBlockTag( ( Block ) object, value, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
 		}
 	}
 
