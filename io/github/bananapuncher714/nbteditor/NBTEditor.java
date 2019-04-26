@@ -24,12 +24,12 @@ import com.mojang.authlib.properties.Property;
 
 /**
  * Sets/Gets NBT tags from ItemStacks 
- * Supports 1.8-1.13
+ * Supports 1.8-1.14
  * 
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/single-class-nbt-editor-for-items-skulls-mobs-and-tile-entities-1-8-1-13.269621/
  * 
- * @version 7.4
+ * @version 7.5
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -91,8 +91,13 @@ public final class NBTEditor {
 			methodCache.put( "set", getNMSClass( "NBTTagCompound" ).getMethod( "set", String.class, getNMSClass( "NBTBase" ) ) );
 			methodCache.put( "hasKey", getNMSClass( "NBTTagCompound" ).getMethod( "hasKey", String.class ) );
 			methodCache.put( "setIndex", getNMSClass( "NBTTagList" ).getMethod( "a", int.class, getNMSClass( "NBTBase" ) ) );
-			methodCache.put( "add", getNMSClass( "NBTTagList" ).getMethod( "add", getNMSClass( "NBTBase" ) ) );
-
+			if ( VERSION.contains( "1_14" ) ) {
+				methodCache.put( "getTypeId", getNMSClass( "NBTBase" ).getMethod( "getTypeId" ) );
+				methodCache.put( "add", getNMSClass( "NBTTagList" ).getMethod( "add", int.class, getNMSClass( "NBTBase" ) ) );
+			} else {
+				methodCache.put( "add", getNMSClass( "NBTTagList" ).getMethod( "add", getNMSClass( "NBTBase" ) ) );
+			}
+			
 			if ( VERSION.contains( "1_8" ) ) {
 				methodCache.put( "listRemove", getNMSClass( "NBTTagList" ).getMethod( "a", int.class )  );
 			} else {
@@ -110,7 +115,7 @@ public final class NBTEditor {
 			methodCache.put( "getEntityTag", getNMSClass( "Entity" ).getMethod( "c", getNMSClass( "NBTTagCompound" ) ) );
 			methodCache.put( "setEntityTag", getNMSClass( "Entity" ).getMethod( "f", getNMSClass( "NBTTagCompound" ) ) );
 
-			if ( VERSION.contains( "1_12" ) || VERSION.contains( "1_13" ) ) {
+			if ( VERSION.contains( "1_12" ) || VERSION.contains( "1_13" ) || VERSION.contains( "1_14" ) ) {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "load", getNMSClass( "NBTTagCompound" ) ) );
 			} else {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "a", getNMSClass( "NBTTagCompound" ) ) );
@@ -942,7 +947,12 @@ public final class NBTEditor {
 			Object key = keys[ index ];
 			if ( index + 1 == keys.length ) {
 				if ( key == null ) {
-					getMethod( "add" ).invoke( compound, notCompound );
+					if ( VERSION.contains( "1_14" ) ) {
+						int type = ( int ) getMethod( "getTypeId" ).invoke( notCompound );
+						getMethod( "add" ).invoke( compound, type, notCompound );
+					} else {
+						getMethod( "add" ).invoke( compound, notCompound );
+					}
 				} else if ( key instanceof Integer ) {
 					if ( notCompound == null ) {
 						getMethod( "listRemove" ).invoke( compound, ( int ) key );
