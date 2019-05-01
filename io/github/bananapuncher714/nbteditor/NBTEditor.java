@@ -10,6 +10,8 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.codec.binary.Base64;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -29,7 +31,7 @@ import com.mojang.authlib.properties.Property;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/single-class-nbt-editor-for-items-skulls-mobs-and-tile-entities-1-8-1-13.269621/
  * 
- * @version 7.5
+ * @version 7.6
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -1075,8 +1077,35 @@ public final class NBTEditor {
 	public static final class NBTCompound {
 		protected final Object tag;
 		
-		protected NBTCompound( Object tag ) {
+		protected NBTCompound( @Nonnull Object tag ) {
 			this.tag = tag;
+		}
+
+		@Override
+		public String toString() {
+			return tag.toString();
+		}
+
+		@Override
+		public int hashCode() {
+			return tag.hashCode();
+		}
+
+		@Override
+		public boolean equals( Object obj ) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			NBTCompound other = (NBTCompound) obj;
+			if (tag == null) {
+				if (other.tag != null)
+					return false;
+			} else if (!tag.equals(other.tag))
+				return false;
+			return true;
 		}
 	}
 }
