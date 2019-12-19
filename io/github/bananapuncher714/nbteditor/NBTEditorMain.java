@@ -27,6 +27,12 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 	@Override
 	public void onEnable() {
 		Bukkit.getPluginManager().registerEvents( this, this );
+		
+		ItemStack item = new ItemStack( Material.ACACIA_BOAT );
+		System.out.println( "Setting value..." );
+		item = NBTEditor.set( item, "Hello, world!", "io", "github", "bananapuncher714", "nbteditor", "test" );
+		System.out.println( "Getting value..." );
+		System.out.println( NBTEditor.getString( item, "io", "github", "bananapuncher714", "nbteditor", "test" ) );
 	}
 
 	@Override
@@ -46,7 +52,7 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 					meta.setDisplayName( ChatColor.RESET + "Key" + legacized );
 					item.setItemMeta( meta );
 					player.getInventory().addItem( item );
-				} else if ( block.getType() == Material.MOB_SPAWNER ) {
+				} else if ( block.getType() == Material.LEGACY_MOB_SPAWNER ) {
 					NBTEditor.set( block, 25f, "SpawnRange");
 					player.sendMessage( "Changed SpawnRange to 25f" );
 				}
@@ -109,7 +115,7 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 		}
 	}
 	
-	private void printNestedMap( Object base, Map< Object, Object > map ) {
+	public static void printNestedMap( Object base, Map< Object, Object > map ) {
 	    for ( Iterator< Object > it = map.keySet().iterator(); it.hasNext(); ) {
 	        Object base2 = it.next();
 	        Object mm = map.get( base2 );

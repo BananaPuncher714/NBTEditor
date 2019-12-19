@@ -1,7 +1,8 @@
 name: NBTEditor
 main: io.github.bananapuncher714.nbteditor.NBTEditorMain
-version: 5.1
+version: 5.2
 author: BananaPuncher714
+api-version: 1.13
 commands:
     nbteditor:
         description: Does stuff
