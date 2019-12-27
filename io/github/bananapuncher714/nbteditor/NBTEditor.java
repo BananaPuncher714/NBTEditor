@@ -29,7 +29,7 @@ import com.mojang.authlib.properties.Property;
  * Supports 1.8-1.15
  * 
  * Github: https://github.com/BananaPuncher714/NBTEditor
- * Spigot: https://www.spigotmc.org/threads/single-class-nbt-editor-for-items-skulls-mobs-and-tile-entities-1-8-1-13.269621/
+ * Spigot: https://www.spigotmc.org/threads/269621/
  * 
  * @version 7.7
  * @author BananaPuncher714
