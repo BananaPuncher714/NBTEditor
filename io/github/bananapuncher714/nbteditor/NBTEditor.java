@@ -31,7 +31,7 @@ import com.mojang.authlib.properties.Property;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.8
+ * @version 7.9
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -43,10 +43,12 @@ public final class NBTEditor {
 	private static Field NBTListData;
 	private static Field NBTCompoundMap;
 	private static final String VERSION;
+	private static final MinecraftVersion LOCAL_VERSION;
 
 	static {
 		VERSION = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-
+		LOCAL_VERSION = MinecraftVersion.get( VERSION );
+		
 		classCache = new HashMap< String, Class<?> >();
 		try {
 			classCache.put( "NBTBase", Class.forName( "net.minecraft.server." + VERSION + "." + "NBTBase" ) );
@@ -93,14 +95,15 @@ public final class NBTEditor {
 			methodCache.put( "set", getNMSClass( "NBTTagCompound" ).getMethod( "set", String.class, getNMSClass( "NBTBase" ) ) );
 			methodCache.put( "hasKey", getNMSClass( "NBTTagCompound" ).getMethod( "hasKey", String.class ) );
 			methodCache.put( "setIndex", getNMSClass( "NBTTagList" ).getMethod( "a", int.class, getNMSClass( "NBTBase" ) ) );
-			if ( VERSION.contains( "1_14" ) || VERSION.contains( "1_15" ) ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
 				methodCache.put( "getTypeId", getNMSClass( "NBTBase" ).getMethod( "getTypeId" ) );
 				methodCache.put( "add", getNMSClass( "NBTTagList" ).getMethod( "add", int.class, getNMSClass( "NBTBase" ) ) );
+				methodCache.put( "size", getNMSClass( "NBTTagList" ).getMethod( "size" ) );
 			} else {
 				methodCache.put( "add", getNMSClass( "NBTTagList" ).getMethod( "add", getNMSClass( "NBTBase" ) ) );
 			}
 			
-			if ( VERSION.contains( "1_8" ) ) {
+			if ( LOCAL_VERSION == MinecraftVersion.v1_8 ) {
 				methodCache.put( "listRemove", getNMSClass( "NBTTagList" ).getMethod( "a", int.class )  );
 			} else {
 				methodCache.put( "listRemove", getNMSClass( "NBTTagList" ).getMethod( "remove", int.class )  );
@@ -117,7 +120,7 @@ public final class NBTEditor {
 			methodCache.put( "getEntityTag", getNMSClass( "Entity" ).getMethod( "c", getNMSClass( "NBTTagCompound" ) ) );
 			methodCache.put( "setEntityTag", getNMSClass( "Entity" ).getMethod( "f", getNMSClass( "NBTTagCompound" ) ) );
 
-			if ( VERSION.contains( "1_12" ) || VERSION.contains( "1_13" ) || VERSION.contains( "1_14" ) || VERSION.contains( "1_15" ) ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_12 )) {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "load", getNMSClass( "NBTTagCompound" ) ) );
 			} else {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "a", getNMSClass( "NBTTagCompound" ) ) );
@@ -699,6 +702,18 @@ public final class NBTEditor {
 		}
 	}
 	
+	private final static Object getValue( Object object, Object... keys ) {
+		if ( object instanceof ItemStack ) {
+			return getItemTag( ( ItemStack ) object, keys );
+		} else if ( object instanceof Entity ) {
+			return getEntityTag( ( Entity ) object, keys );
+		} else if ( object instanceof Block ) {
+			return getBlockTag( ( Block ) object, keys );
+		} else {
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+		}
+	}
+	
 	/**
 	 * Gets a string from an object
 	 * 
@@ -710,16 +725,7 @@ public final class NBTEditor {
 	 * A string, or null if none is stored at the provided location
 	 */
 	public final static String getString( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result instanceof String ? ( String ) result : null;
 	}
 	
@@ -734,16 +740,7 @@ public final class NBTEditor {
 	 * An integer, or 0 if none is stored at the provided location
 	 */
 	public final static int getInt( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result instanceof Integer ? ( int ) result : 0;
 	}
 	
@@ -758,16 +755,7 @@ public final class NBTEditor {
 	 * A double, or 0 if none is stored at the provided location
 	 */
 	public final static double getDouble( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result instanceof Double ? ( double ) result : 0;
 	}
 	
@@ -782,16 +770,7 @@ public final class NBTEditor {
 	 * A long, or 0 if none is stored at the provided location
 	 */
 	public final static long getLong( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result instanceof Long ? ( long ) result : 0;
 	}
 	
@@ -806,16 +785,7 @@ public final class NBTEditor {
 	 * A float, or 0 if none is stored at the provided location
 	 */
 	public final static float getFloat( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result instanceof Float ? ( float ) result : 0;
 	}
 	
@@ -830,16 +800,7 @@ public final class NBTEditor {
 	 * A short, or 0 if none is stored at the provided location
 	 */
 	public final static short getShort( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result instanceof Short ? ( short ) result : 0;
 	}
 	
@@ -854,16 +815,7 @@ public final class NBTEditor {
 	 * A byte, or 0 if none is stored at the provided location
 	 */
 	public final static byte getByte( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result instanceof Byte ? ( byte ) result : 0;
 	}
 	
@@ -878,16 +830,7 @@ public final class NBTEditor {
 	 * A byte array, or null if none is stored at the provided location
 	 */
 	public final static byte[] getByteArray( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result instanceof byte[] ? ( byte[] ) result : null;
 	}
 	
@@ -902,16 +845,7 @@ public final class NBTEditor {
 	 * An int array, or null if none is stored at the provided location
 	 */
 	public final static int[] getIntArray( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result instanceof int[] ? ( int[] ) result : null;
 	}
 	
@@ -926,16 +860,7 @@ public final class NBTEditor {
 	 * Whether or not the particular tag exists, may not be a primitive
 	 */
 	public final static boolean contains( Object object, Object... keys ) {
-		Object result;
-		if ( object instanceof ItemStack ) {
-			result = getItemTag( ( ItemStack ) object, keys );
-		} else if ( object instanceof Entity ) {
-			result = getEntityTag( ( Entity ) object, keys );
-		} else if ( object instanceof Block ) {
-			result = getBlockTag( ( Block ) object, keys );
-		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
-		}
+		Object result = getValue( object, keys );
 		return result != null;
 	}
 	
@@ -966,8 +891,11 @@ public final class NBTEditor {
 
 	private static void setTag( Object tag, Object value, Object... keys ) throws Exception {
 		Object notCompound;
+		// Get the real value of what we want to set here
 		if ( value != null ) {
-			if ( getNMSClass( "NBTTagList" ).isInstance( value ) || getNMSClass( "NBTTagCompound" ).isInstance( value ) ) {
+			if ( value instanceof NBTCompound ) {
+				notCompound = ( ( NBTCompound ) value ).tag;
+			} else if ( getNMSClass( "NBTTagList" ).isInstance( value ) || getNMSClass( "NBTTagCompound" ).isInstance( value ) ) {
 				notCompound = value;
 			} else {
 				notCompound = getConstructor( getNBTTag( value.getClass() ) ).newInstance( value );
@@ -977,31 +905,8 @@ public final class NBTEditor {
 		}
 
 		Object compound = tag;
-		for ( int index = 0; index < keys.length; index++ ) {
+		for ( int index = 0; index < keys.length - 1; index++ ) {
 			Object key = keys[ index ];
-			if ( index + 1 == keys.length ) {
-				if ( key == null ) {
-					if ( VERSION.contains( "1_14" ) ) {
-						int type = ( int ) getMethod( "getTypeId" ).invoke( notCompound );
-						getMethod( "add" ).invoke( compound, type, notCompound );
-					} else {
-						getMethod( "add" ).invoke( compound, notCompound );
-					}
-				} else if ( key instanceof Integer ) {
-					if ( notCompound == null ) {
-						getMethod( "listRemove" ).invoke( compound, ( int ) key );
-					} else {
-						getMethod( "setIndex" ).invoke( compound, ( int ) key, notCompound );
-					}
-				} else {
-					if ( notCompound == null ) {
-						getMethod( "remove" ).invoke( compound, ( String ) key );
-					} else {
-						getMethod( "set" ).invoke( compound, ( String ) key, notCompound );
-					}
-				}
-				break;
-			}
 			Object oldCompound = compound;
 			if ( key instanceof Integer ) {
 				compound = ( ( List< ? > ) NBTListData.get( compound ) ).get( ( int ) key );
@@ -1015,19 +920,34 @@ public final class NBTEditor {
 					compound = getNMSClass( "NBTTagCompound" ).newInstance();
 				}
 				if ( oldCompound.getClass().getSimpleName().equals( "NBTTagList" ) ) {
-					if ( VERSION.contains( "1_14" ) ) {
-						int type = ( int ) getMethod( "getTypeId" ).invoke( notCompound );
-						getMethod( "add" ).invoke( compound, type, notCompound );
+					if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
+						getMethod( "add" ).invoke( oldCompound, getMethod( "size" ).invoke( oldCompound ), compound );
 					} else {
-						getMethod( "add" ).invoke( compound, notCompound );
+						getMethod( "add" ).invoke( oldCompound, compound );
 					}
 				} else {
-					if ( notCompound == null ) {
-						getMethod( "remove" ).invoke( oldCompound, ( String ) key );
-					} else {
-						getMethod( "set" ).invoke( oldCompound, ( String ) key, compound );
-					}
+					getMethod( "set" ).invoke( oldCompound, ( String ) key, compound );
 				}
+			}
+		}
+		Object lastKey = keys[ keys.length - 1 ];
+		if ( lastKey == null ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
+				getMethod( "add" ).invoke( compound, getMethod( "size" ).invoke( compound ), notCompound );
+			} else {
+				getMethod( "add" ).invoke( compound, notCompound );
+			}
+		} else if ( lastKey instanceof Integer ) {
+			if ( notCompound == null ) {
+				getMethod( "listRemove" ).invoke( compound, ( int ) lastKey );
+			} else {
+				getMethod( "setIndex" ).invoke( compound, ( int ) lastKey, notCompound );
+			}
+		} else {
+			if ( notCompound == null ) {
+				getMethod( "remove" ).invoke( compound, ( String ) lastKey );
+			} else {
+				getMethod( "set" ).invoke( compound, ( String ) lastKey, notCompound );
 			}
 		}
 	}
@@ -1143,6 +1063,39 @@ public final class NBTEditor {
 			} else if (!tag.equals(other.tag))
 				return false;
 			return true;
+		}
+	}
+	
+	private enum MinecraftVersion {
+		v1_8( "1_8", 0 ),
+		v1_9( "1_9", 1 ),
+		v1_10( "1_10", 2 ),
+		v1_11( "1_11", 3 ),
+		v1_12( "1_12", 4 ),
+		v1_13( "1_13", 5 ),
+		v1_14( "1_14", 6 ),
+		v1_15( "1_15", 7 );
+		
+		private int order;
+		private String key;
+		
+		MinecraftVersion( String key, int v ) {
+			this.key = key;
+			order = v;
+		}
+		
+		// Would be really cool if we could overload operators here
+		public boolean greaterThanOrEqualTo( MinecraftVersion other ) {
+			return order >= other.order;
+		}
+		
+		public static MinecraftVersion get( String v ) {
+			for ( MinecraftVersion k : MinecraftVersion.values() ) {
+				if ( v.contains( k.key ) ) {
+					return k;
+				}
+			}
+			return null;
 		}
 	}
 }

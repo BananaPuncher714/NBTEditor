@@ -7,11 +7,14 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,11 +31,23 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 	public void onEnable() {
 		Bukkit.getPluginManager().registerEvents( this, this );
 		
-		ItemStack item = new ItemStack( Material.ACACIA_BOAT );
+		ItemStack item = new ItemStack( Material.DIAMOND_HOE );
 		System.out.println( "Setting value..." );
 		item = NBTEditor.set( item, "Hello, world!", "io", "github", "bananapuncher714", "nbteditor", "test" );
 		System.out.println( "Getting value..." );
 		System.out.println( NBTEditor.getString( item, "io", "github", "bananapuncher714", "nbteditor", "test" ) );
+		
+		/*
+		item = NBTEditor.set(item, "generic.movementSpeed", "AttributeModifiers", null, "Name");
+		item = NBTEditor.set(item, "generic.movementSpeed", "AttributeModifiers", 0, "AttributeName");
+
+        item = NBTEditor.set(item, 0.01, "AttributeModifiers", 0, "Amount");
+        item = NBTEditor.set(item, 0, "AttributeModifiers", 0, "Operation");
+        item = NBTEditor.set(item, (long) 894654, "AttributeModifiers", 0, "UUIDLeast");
+        item = NBTEditor.set(item, (long) 2872, "AttributeModifiers", 0, "UUIDMost");
+        */
+        
+        System.out.println( NBTEditor.getItemNBTTag( item ) );
 	}
 
 	@Override
@@ -89,6 +104,11 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 						player.setItemInHand( item );
 						player.sendMessage( "" + NBTEditor.getString( item, "test", "value" ) );
 					}
+				} else if ( args[ 0 ].equalsIgnoreCase( "fireball" ) ) {
+					Location loc = player.getEyeLocation().add( 0, 2, 0 );
+					Fireball fireball = ( Fireball ) player.getWorld().spawnEntity( loc, EntityType.FIREBALL );
+					ItemStack item = player.getInventory().getItemInMainHand();
+					NBTEditor.set( fireball, NBTEditor.getItemNBTTag( item ), "Item" );
 				}
 			}
 		}
