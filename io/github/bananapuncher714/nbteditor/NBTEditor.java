@@ -2,6 +2,7 @@ package io.github.bananapuncher714.nbteditor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Base64;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ import com.mojang.authlib.properties.Property;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.9
+ * @version 7.10
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -57,7 +58,8 @@ public final class NBTEditor {
 
 			classCache.put( "ItemStack", Class.forName( "net.minecraft.server." + VERSION + "." + "ItemStack" ) );
 			classCache.put( "CraftItemStack", Class.forName( "org.bukkit.craftbukkit." + VERSION + ".inventory." + "CraftItemStack" ) );
-
+			classCache.put( "CraftMetaSkull", Class.forName( "org.bukkit.craftbukkit." + VERSION + ".inventory." + "CraftMetaSkull" ) );
+			
 			classCache.put( "Entity", Class.forName( "net.minecraft.server." + VERSION + "." + "Entity" ) );
 			classCache.put( "CraftEntity", Class.forName( "org.bukkit.craftbukkit." + VERSION + ".entity." + "CraftEntity" ) );
 			classCache.put( "EntityLiving", Class.forName( "net.minecraft.server." + VERSION + "." + "EntityLiving" ) );
@@ -142,6 +144,13 @@ public final class NBTEditor {
 			}
 		} catch( Exception exception ) {
 			exception.printStackTrace();
+		}
+		
+		try {
+			methodCache.put( "setProfile", getNMSClass( "CraftMetaSkull" ).getDeclaredMethod( "setProfile", GameProfile.class ) );
+			methodCache.get( "setProfile" ).setAccessible( true );
+		} catch( NoSuchMethodException exception ) {
+			// The method doesn't exist, so it's before 1.15.2
 		}
 
 		constructorCache = new HashMap< Class< ? >, Constructor< ? > >();
@@ -271,17 +280,26 @@ public final class NBTEditor {
 		GameProfile profile = new GameProfile( UUID.randomUUID(), null);
 		byte[] encodedData = Base64.getEncoder().encode( String.format( "{textures:{SKIN:{\"url\":\"%s\"}}}", skinURL ).getBytes() );
 		profile.getProperties().put("textures", new Property("textures", new String(encodedData)));
-		Field profileField = null;
-		try {
-			profileField = headMeta.getClass().getDeclaredField("profile");
-		} catch ( NoSuchFieldException | SecurityException e ) {
-			e.printStackTrace();
-		}
-		profileField.setAccessible(true);
-		try {
-			profileField.set(headMeta, profile);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
+		
+		if ( methodCache.containsKey( "setProfile" ) ) {
+			try {
+				getMethod( "setProfile" ).invoke( headMeta, profile );
+			} catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
+				e.printStackTrace();
+			}
+		} else {
+			Field profileField = null;
+			try {
+				profileField = headMeta.getClass().getDeclaredField("profile");
+			} catch ( NoSuchFieldException | SecurityException e ) {
+				e.printStackTrace();
+			}
+			profileField.setAccessible(true);
+			try {
+				profileField.set(headMeta, profile);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
 		}
 		head.setItemMeta(headMeta);
 		return head;
@@ -708,8 +726,14 @@ public final class NBTEditor {
 			return getEntityTag( ( Entity ) object, keys );
 		} else if ( object instanceof Block ) {
 			return getBlockTag( ( Block ) object, keys );
+		} else if ( object instanceof NBTCompound ) {
+			try {
+				return getTag( ( ( NBTCompound ) object ).tag, keys );
+			} catch ( Exception e ) {
+				return null;
+			}
 		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, Block, or NBTCompound!" );
 		}
 	}
 	
@@ -1037,6 +1061,14 @@ public final class NBTEditor {
 			this.tag = tag;
 		}
 
+		public void set( Object value, Object... keys ) {
+			try {
+				setTag( tag, value, keys );
+			} catch ( Exception e ) {
+				e.printStackTrace();
+			}
+		}
+		
 		@Override
 		public String toString() {
 			return tag.toString();

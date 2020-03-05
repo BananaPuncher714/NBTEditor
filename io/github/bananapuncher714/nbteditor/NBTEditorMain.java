@@ -47,6 +47,11 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
         item = NBTEditor.set(item, (long) 2872, "AttributeModifiers", 0, "UUIDMost");
         */
         
+		ItemStack skull1 = NBTEditor.getHead( "http://textures.minecraft.net/texture/7fe9725c950472e469b9fccae32f61bcefebdb5ea9ce9c92d58171ffb7a336fe" );
+		ItemStack skull2 = skull1.clone();
+		
+		System.out.println( "isSimilar skull check: " + ( skull1.isSimilar( skull2 ) ) );
+		
         System.out.println( NBTEditor.getItemNBTTag( item ) );
 	}
 
