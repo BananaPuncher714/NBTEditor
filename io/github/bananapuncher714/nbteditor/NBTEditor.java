@@ -254,7 +254,7 @@ public final class NBTEditor {
 	 * @return
 	 * The Bukkit version in standard package format
 	 */
-	public final static String getVersion() {
+	public static String getVersion() {
 		return VERSION;
 	}
 
@@ -266,7 +266,7 @@ public final class NBTEditor {
 	 * @return
 	 * An item stack with count of 1
 	 */
-	public final static ItemStack getHead( String skinURL ) {
+	public static ItemStack getHead( String skinURL ) {
 		Material material = Material.getMaterial( "SKULL_ITEM" );
 		if ( material == null ) {
 			// Most likely 1.13 materials
@@ -313,7 +313,7 @@ public final class NBTEditor {
 	 * @return
 	 * The URL of the texture
 	 */
-	public final static String getTexture( ItemStack head ) {
+	public static String getTexture( ItemStack head ) {
 		ItemMeta meta = head.getItemMeta();
 		Field profileField = null;
 		try {
@@ -355,7 +355,7 @@ public final class NBTEditor {
 	 * @return
 	 * The item represented by the keys, and an integer if it is showing how long a list is.
 	 */
-	public final static Object getItemTag( ItemStack item, Object... keys ) {
+	public static Object getItemTag( ItemStack item, Object... keys ) {
 		if ( item == null ) {
 			return null;
 		}
@@ -388,7 +388,7 @@ public final class NBTEditor {
 	 * @return
 	 * An NBTCompound
 	 */
-	public final static NBTCompound getItemNBTTag( ItemStack item, Object... keys ) {
+	public static NBTCompound getItemNBTTag( ItemStack item, Object... keys ) {
 		if ( item == null ) {
 			return null;
 		}
@@ -430,7 +430,7 @@ public final class NBTEditor {
 	 * @return
 	 * A new ItemStack with the updated NBT tags
 	 */
-	public final static ItemStack setItemTag( ItemStack item, Object value, Object... keys ) {
+	public static ItemStack setItemTag( ItemStack item, Object value, Object... keys ) {
 		if ( item == null ) {
 			return null;
 		}
@@ -462,7 +462,7 @@ public final class NBTEditor {
 	 * @return
 	 * A new ItemStack
 	 */
-	public final static ItemStack getItemFromTag( NBTCompound compound ) {
+	public static ItemStack getItemFromTag( NBTCompound compound ) {
 		if ( compound == null ) {
 			return null;
 		}
@@ -499,7 +499,7 @@ public final class NBTEditor {
 	 * @return
 	 * The item represented by the keys, and an integer if it is showing how long a list is.
 	 */
-	public final static Object getEntityTag( Entity entity, Object... keys ) {
+	public static Object getEntityTag( Entity entity, Object... keys ) {
 		if ( entity == null ) {
 			return entity;
 		}
@@ -527,7 +527,7 @@ public final class NBTEditor {
 	 * @return
 	 * An NBTCompound
 	 */
-	public final static NBTCompound getEntityNBTTag( Entity entity, Object...keys ) {
+	public static NBTCompound getEntityNBTTag( Entity entity, Object...keys ) {
 		if ( entity == null ) {
 			return null;
 		}
@@ -560,7 +560,7 @@ public final class NBTEditor {
 	 * @return
 	 * A new ItemStack with the updated NBT tags
 	 */
-	public final static void setEntityTag( Entity entity, Object value, Object... keys ) {
+	public static void setEntityTag( Entity entity, Object value, Object... keys ) {
 		if ( entity == null ) {
 			return;
 		}
@@ -593,7 +593,7 @@ public final class NBTEditor {
 	 * @return
 	 * The item represented by the keys, and an integer if it is showing how long a list is.
 	 */
-	public final static Object getBlockTag( Block block, Object... keys ) {
+	public static Object getBlockTag( Block block, Object... keys ) {
 		try {
 			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
 				return null;
@@ -627,7 +627,7 @@ public final class NBTEditor {
 	 * @return
 	 * An NBTCompound
 	 */
-	public final static Object getBlockNBTTag( Block block, Object... keys ) {
+	public static Object getBlockNBTTag( Block block, Object... keys ) {
 		try {
 			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
 				return null;
@@ -666,7 +666,7 @@ public final class NBTEditor {
 	 * @return
 	 * A new ItemStack with the updated NBT tags
 	 */
-	public final static void setBlockTag( Block block, Object value, Object... keys ) {
+	public static void setBlockTag( Block block, Object value, Object... keys ) {
 		try {
 			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
 				return;
@@ -700,7 +700,7 @@ public final class NBTEditor {
 	 * @param texture
 	 * The URL of the skin
 	 */
-	public final static void setSkullTexture( Block block, String texture ) {
+	public static void setSkullTexture( Block block, String texture ) {
 		GameProfile profile = new GameProfile( UUID.randomUUID(), null );
 		profile.getProperties().put( "textures", new com.mojang.authlib.properties.Property( "textures", new String( Base64.getEncoder().encode( String.format( "{textures:{SKIN:{\"url\":\"%s\"}}}", texture ).getBytes() ) ) ) );
 		
@@ -719,7 +719,7 @@ public final class NBTEditor {
 		}
 	}
 	
-	private final static Object getValue( Object object, Object... keys ) {
+	private static Object getValue( Object object, Object... keys ) {
 		if ( object instanceof ItemStack ) {
 			return getItemTag( ( ItemStack ) object, keys );
 		} else if ( object instanceof Entity ) {
@@ -747,7 +747,7 @@ public final class NBTEditor {
 	 * @return
 	 * A string, or null if none is stored at the provided location
 	 */
-	public final static String getString( Object object, Object... keys ) {
+	public static String getString( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result instanceof String ? ( String ) result : null;
 	}
@@ -762,7 +762,7 @@ public final class NBTEditor {
 	 * @return
 	 * An integer, or 0 if none is stored at the provided location
 	 */
-	public final static int getInt( Object object, Object... keys ) {
+	public static int getInt( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result instanceof Integer ? ( int ) result : 0;
 	}
@@ -777,7 +777,7 @@ public final class NBTEditor {
 	 * @return
 	 * A double, or 0 if none is stored at the provided location
 	 */
-	public final static double getDouble( Object object, Object... keys ) {
+	public static double getDouble( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result instanceof Double ? ( double ) result : 0;
 	}
@@ -792,7 +792,7 @@ public final class NBTEditor {
 	 * @return
 	 * A long, or 0 if none is stored at the provided location
 	 */
-	public final static long getLong( Object object, Object... keys ) {
+	public static long getLong( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result instanceof Long ? ( long ) result : 0;
 	}
@@ -807,7 +807,7 @@ public final class NBTEditor {
 	 * @return
 	 * A float, or 0 if none is stored at the provided location
 	 */
-	public final static float getFloat( Object object, Object... keys ) {
+	public static float getFloat( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result instanceof Float ? ( float ) result : 0;
 	}
@@ -822,7 +822,7 @@ public final class NBTEditor {
 	 * @return
 	 * A short, or 0 if none is stored at the provided location
 	 */
-	public final static short getShort( Object object, Object... keys ) {
+	public static short getShort( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result instanceof Short ? ( short ) result : 0;
 	}
@@ -837,7 +837,7 @@ public final class NBTEditor {
 	 * @return
 	 * A byte, or 0 if none is stored at the provided location
 	 */
-	public final static byte getByte( Object object, Object... keys ) {
+	public static byte getByte( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result instanceof Byte ? ( byte ) result : 0;
 	}
@@ -852,7 +852,7 @@ public final class NBTEditor {
 	 * @return
 	 * A byte array, or null if none is stored at the provided location
 	 */
-	public final static byte[] getByteArray( Object object, Object... keys ) {
+	public static byte[] getByteArray( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result instanceof byte[] ? ( byte[] ) result : null;
 	}
@@ -867,7 +867,7 @@ public final class NBTEditor {
 	 * @return
 	 * An int array, or null if none is stored at the provided location
 	 */
-	public final static int[] getIntArray( Object object, Object... keys ) {
+	public static int[] getIntArray( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result instanceof int[] ? ( int[] ) result : null;
 	}
@@ -882,7 +882,7 @@ public final class NBTEditor {
 	 * @return
 	 * Whether or not the particular tag exists, may not be a primitive
 	 */
-	public final static boolean contains( Object object, Object... keys ) {
+	public static boolean contains( Object object, Object... keys ) {
 		Object result = getValue( object, keys );
 		return result != null;
 	}
@@ -899,7 +899,7 @@ public final class NBTEditor {
 	 * @return
 	 * The new item stack if the object provided is an item, else original object
 	 */
-	public final static < T > T set( T object, Object value, Object... keys ) {
+	public static < T > T set( T object, Object value, Object... keys ) {
 		if ( object instanceof ItemStack ) {
 			return ( T ) setItemTag( ( ItemStack ) object, value, keys );
 		} else if ( object instanceof Entity ) {
