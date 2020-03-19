@@ -25,34 +25,63 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import io.github.bananapuncher714.nbteditor.NBTEditor.NBTCompound;
+
 public class NBTEditorMain extends JavaPlugin implements Listener {
 
 	@Override
 	public void onEnable() {
 		Bukkit.getPluginManager().registerEvents( this, this );
+		{
+			ItemStack item = new ItemStack( Material.DIAMOND_HOE );
+			System.out.println( "Setting value..." );
+			item = NBTEditor.set( item, "Hello, world!", "io", "github", "bananapuncher714", "nbteditor", "test" );
+			System.out.println( "Getting value..." );
+			System.out.println( NBTEditor.getString( item, "io", "github", "bananapuncher714", "nbteditor", "test" ) );
+			System.out.println( NBTEditor.getItemNBTTag( item ) );
+		}
 		
-		ItemStack item = new ItemStack( Material.DIAMOND_HOE );
-		System.out.println( "Setting value..." );
-		item = NBTEditor.set( item, "Hello, world!", "io", "github", "bananapuncher714", "nbteditor", "test" );
-		System.out.println( "Getting value..." );
-		System.out.println( NBTEditor.getString( item, "io", "github", "bananapuncher714", "nbteditor", "test" ) );
-		
-		/*
-		item = NBTEditor.set(item, "generic.movementSpeed", "AttributeModifiers", null, "Name");
-		item = NBTEditor.set(item, "generic.movementSpeed", "AttributeModifiers", 0, "AttributeName");
+		{
+			ItemStack item = new ItemStack( Material.DIAMOND_SWORD );
+			NBTCompound compound = NBTEditor.getItemNBTTag( item );
 
-        item = NBTEditor.set(item, 0.01, "AttributeModifiers", 0, "Amount");
-        item = NBTEditor.set(item, 0, "AttributeModifiers", 0, "Operation");
-        item = NBTEditor.set(item, (long) 894654, "AttributeModifiers", 0, "UUIDLeast");
-        item = NBTEditor.set(item, (long) 2872, "AttributeModifiers", 0, "UUIDMost");
-        */
+			// To add one attribute
+			compound.set( "generic.attackDamage", "AttributeModifiers", null, "AttributeName" );
+			compound.set( "Attack Damage", "AttributeModifiers", 0, "Name" );
+			compound.set( "mainhand", "AttributeModifiers", 0, "Slot" );
+			compound.set( 0, "AttributeModifiers", 0, "Operation" );
+			compound.set( 20.0, "AttributeModifiers", 0, "Amount" );
+			compound.set( 99L, "AttributeModifiers", 0, "UUIDMost" );
+			compound.set( 77530600L, "AttributeModifiers", 0, "UUIDLeast" );
+
+			// To add another attribute
+			compound.set( "generic.attackKnockback", "AttributeModifiers", null, "AttributeName" );
+			compound.set( "Knockback", "AttributeModifiers", 1, "Name" );
+			compound.set( "mainhand", "AttributeModifiers", 1, "Slot" );
+			compound.set( 0, "AttributeModifiers", 1, "Operation" );
+			compound.set( 5.0, "AttributeModifiers", 1, "Amount" );
+			compound.set( 99L, "AttributeModifiers", 1, "UUIDMost" );
+			compound.set( 77530600L, "AttributeModifiers", 1, "UUIDLeast" );
+
+			// A third attribute
+			compound.set( "generic.movementSpeed", "AttributeModifiers", null, "AttributeName" );
+			compound.set( "Movement", "AttributeModifiers", 2, "Name" );
+			compound.set( "mainhand", "AttributeModifiers", 2, "Slot" );
+			compound.set( 1, "AttributeModifiers", 2, "Operation" );
+			compound.set( 2.0, "AttributeModifiers", 2, "Amount" );
+			compound.set( 99L, "AttributeModifiers", 2, "UUIDMost" );
+			compound.set( 77530600L, "AttributeModifiers", 2, "UUIDLeast" );
+
+			// Now convert it back into an item
+			System.out.println( compound );
+			item = NBTEditor.getItemFromTag( compound );
+			System.out.println( item );
+		}
         
 		ItemStack skull1 = NBTEditor.getHead( "http://textures.minecraft.net/texture/7fe9725c950472e469b9fccae32f61bcefebdb5ea9ce9c92d58171ffb7a336fe" );
 		ItemStack skull2 = skull1.clone();
 		
 		System.out.println( "isSimilar skull check: " + ( skull1.isSimilar( skull2 ) ) );
-		
-        System.out.println( NBTEditor.getItemNBTTag( item ) );
 	}
 
 	@Override

@@ -32,7 +32,7 @@ import com.mojang.authlib.properties.Property;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.10
+ * @version 7.11
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -121,6 +121,8 @@ public final class NBTEditor {
 			methodCache.put( "getEntityTag", getNMSClass( "Entity" ).getMethod( "c", getNMSClass( "NBTTagCompound" ) ) );
 			methodCache.put( "setEntityTag", getNMSClass( "Entity" ).getMethod( "f", getNMSClass( "NBTTagCompound" ) ) );
 
+			methodCache.put( "save", getNMSClass( "ItemStack" ).getMethod( "save", getNMSClass( "NBTTagCompound" ) ) );
+			
 			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_12 )) {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "load", getNMSClass( "NBTTagCompound" ) ) );
 			} else {
@@ -247,7 +249,7 @@ public final class NBTEditor {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Gets the Bukkit version
 	 * 
@@ -396,17 +398,9 @@ public final class NBTEditor {
 			Object stack = null;
 			stack = getMethod( "asNMSCopy" ).invoke( null, item );
 
-			Object tag = null;
-
-			if ( getMethod( "hasTag" ).invoke( stack ).equals( true ) ) {
-				tag = getMethod( "getTag" ).invoke( stack );
-			} else {
-				tag = getNMSClass( "NBTTagCompound" ).newInstance();
-				Object count = getConstructor( getNBTTag( Integer.class ) ).newInstance( item.getAmount() );
-				getMethod( "set" ).invoke( tag, "Count", count );
-				Object id = getConstructor( getNBTTag( String.class ) ).newInstance( item.getType().name().toLowerCase() );
-				getMethod( "set" ).invoke( tag, "id", id );
-			}
+			Object tag = getNMSClass( "NBTTagCompound" ).newInstance();
+			
+			tag = getMethod( "save" ).invoke( stack, tag );
 
 			return getNBTTag( tag, keys );
 		} catch ( Exception exception ) {
@@ -444,8 +438,13 @@ public final class NBTEditor {
 			} else {
 				tag = getNMSClass( "NBTTagCompound" ).newInstance();
 			}
+		
+			if ( keys.length == 0 && value instanceof NBTCompound ) {
+				tag = ( ( NBTCompound ) value ).tag;
+			} else {
+				setTag( tag, value, keys );
+			}
 
-			setTag( tag, value, keys );
 			getMethod( "setTag" ).invoke( stack, tag );
 			return ( ItemStack ) getMethod( "asBukkitCopy" ).invoke( null, stack );
 		} catch ( Exception exception ) {
@@ -477,7 +476,7 @@ public final class NBTEditor {
 				int amount = ( byte ) count;
 				String material = ( String ) id;
 				Material type = Material.valueOf( material.substring( material.indexOf( ":" ) + 1 ).toUpperCase() );
-				return NBTEditor.setItemTag( new ItemStack( type, amount ), tag );
+				return NBTEditor.setItemTag( new ItemStack( type, amount ), compound );
 			}
 			return null;
 		} catch ( Exception exception ) {
@@ -571,7 +570,11 @@ public final class NBTEditor {
 
 			getMethod( "getEntityTag" ).invoke( NMSEntity, tag );
 
-			setTag( tag, value, keys );
+			if ( keys.length == 0 && value instanceof NBTCompound ) {
+				tag = ( ( NBTCompound ) value ).tag;
+			} else {
+				setTag( tag, value, keys );
+			}
 
 			getMethod( "setEntityTag" ).invoke( NMSEntity, tag );
 		} catch ( Exception exception ) {
@@ -683,7 +686,11 @@ public final class NBTEditor {
 			
 			getMethod( "getTileTag" ).invoke( tileEntity, tag );
 
-			setTag( tag, value, keys );
+			if ( keys.length == 0 && value instanceof NBTCompound ) {
+				tag = ( ( NBTCompound ) value ).tag;
+			} else {
+				setTag( tag, value, keys );
+			}
 
 			getMethod( "setTileTag" ).invoke( tileEntity, tag );
 		} catch( Exception exception ) {
@@ -953,24 +960,29 @@ public final class NBTEditor {
 				}
 			}
 		}
-		Object lastKey = keys[ keys.length - 1 ];
-		if ( lastKey == null ) {
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
-				getMethod( "add" ).invoke( compound, getMethod( "size" ).invoke( compound ), notCompound );
+		if ( keys.length > 0 ) {
+			Object lastKey = keys[ keys.length - 1 ];
+			if ( lastKey == null ) {
+				if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
+					getMethod( "add" ).invoke( compound, getMethod( "size" ).invoke( compound ), notCompound );
+				} else {
+					getMethod( "add" ).invoke( compound, notCompound );
+				}
+			} else if ( lastKey instanceof Integer ) {
+				if ( notCompound == null ) {
+					getMethod( "listRemove" ).invoke( compound, ( int ) lastKey );
+				} else {
+					getMethod( "setIndex" ).invoke( compound, ( int ) lastKey, notCompound );
+				}
 			} else {
-				getMethod( "add" ).invoke( compound, notCompound );
-			}
-		} else if ( lastKey instanceof Integer ) {
-			if ( notCompound == null ) {
-				getMethod( "listRemove" ).invoke( compound, ( int ) lastKey );
-			} else {
-				getMethod( "setIndex" ).invoke( compound, ( int ) lastKey, notCompound );
+				if ( notCompound == null ) {
+					getMethod( "remove" ).invoke( compound, ( String ) lastKey );
+				} else {
+					getMethod( "set" ).invoke( compound, ( String ) lastKey, notCompound );
+				}
 			}
 		} else {
-			if ( notCompound == null ) {
-				getMethod( "remove" ).invoke( compound, ( String ) lastKey );
-			} else {
-				getMethod( "set" ).invoke( compound, ( String ) lastKey, notCompound );
+			if ( notCompound != null ) {
 			}
 		}
 	}
