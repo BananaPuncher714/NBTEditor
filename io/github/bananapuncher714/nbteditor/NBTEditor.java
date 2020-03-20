@@ -32,7 +32,7 @@ import com.mojang.authlib.properties.Property;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.11
+ * @version 7.12
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -123,6 +123,12 @@ public final class NBTEditor {
 
 			methodCache.put( "save", getNMSClass( "ItemStack" ).getMethod( "save", getNMSClass( "NBTTagCompound" ) ) );
 			
+			if ( LOCAL_VERSION.lessThanOrEqualTo( MinecraftVersion.v1_10 ) ) {
+				methodCache.put( "createStack", getNMSClass( "ItemStack" ).getMethod( "createStack", getNMSClass( "NBTTagCompound" ) ) );
+			} else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_13 ) ) {
+				methodCache.put( "createStack", getNMSClass( "ItemStack" ).getMethod( "a", getNMSClass( "NBTTagCompound" ) ) );
+			}
+			
 			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_12 )) {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "load", getNMSClass( "NBTTagCompound" ) ) );
 			} else {
@@ -173,6 +179,10 @@ public final class NBTEditor {
 			}
 			
 			constructorCache.put( getNMSClass( "BlockPosition" ), getNMSClass( "BlockPosition" ).getConstructor( int.class, int.class, int.class ) );
+			
+			if ( LOCAL_VERSION == MinecraftVersion.v1_11 || LOCAL_VERSION == MinecraftVersion.v1_12 ) {
+				constructorCache.put( getNMSClass( "ItemStack" ), getNMSClass( "ItemStack" ).getConstructor( getNMSClass( "NBTTagCompound" ) ) );
+			}
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -248,6 +258,13 @@ public final class NBTEditor {
 		} else {
 			return null;
 		}
+	}
+	
+	private static Object createItemStack( Object compound ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
+		if ( LOCAL_VERSION == MinecraftVersion.v1_11 || LOCAL_VERSION == MinecraftVersion.v1_12 ) {
+			return getConstructor( getNMSClass( "ItemStack" ) ).newInstance( compound );
+		}
+		return getMethod( "createStack" ).invoke( null, compound );
 	}
 
 	/**
@@ -473,10 +490,7 @@ public final class NBTEditor {
 				return null;
 			}
 			if ( count instanceof Byte && id instanceof String ) {
-				int amount = ( byte ) count;
-				String material = ( String ) id;
-				Material type = Material.valueOf( material.substring( material.indexOf( ":" ) + 1 ).toUpperCase() );
-				return NBTEditor.setItemTag( new ItemStack( type, amount ), compound );
+				return ( ItemStack ) getMethod( "asBukkitCopy" ).invoke( null, createItemStack( tag ) );
 			}
 			return null;
 		} catch ( Exception exception ) {
@@ -914,7 +928,7 @@ public final class NBTEditor {
 		} else if ( object instanceof Block ) {
 			setBlockTag( ( Block ) object, value, keys );
 		} else {
-			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, or Block!" );
+			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, Block, or NBTCompound!" );
 		}
 		return object;
 	}
@@ -1130,6 +1144,10 @@ public final class NBTEditor {
 		// Would be really cool if we could overload operators here
 		public boolean greaterThanOrEqualTo( MinecraftVersion other ) {
 			return order >= other.order;
+		}
+		
+		public boolean lessThanOrEqualTo( MinecraftVersion other ) {
+			return order <= other.order;
 		}
 		
 		public static MinecraftVersion get( String v ) {

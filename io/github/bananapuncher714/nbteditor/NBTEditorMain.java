@@ -43,39 +43,47 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 		
 		{
 			ItemStack item = new ItemStack( Material.DIAMOND_SWORD );
+			ItemMeta meta = item.getItemMeta();
+			meta.setDisplayName( "Test" );
+			item.setItemMeta( meta );
 			NBTCompound compound = NBTEditor.getItemNBTTag( item );
 
 			// To add one attribute
-			compound.set( "generic.attackDamage", "AttributeModifiers", null, "AttributeName" );
-			compound.set( "Attack Damage", "AttributeModifiers", 0, "Name" );
-			compound.set( "mainhand", "AttributeModifiers", 0, "Slot" );
-			compound.set( 0, "AttributeModifiers", 0, "Operation" );
-			compound.set( 20.0, "AttributeModifiers", 0, "Amount" );
-			compound.set( 99L, "AttributeModifiers", 0, "UUIDMost" );
-			compound.set( 77530600L, "AttributeModifiers", 0, "UUIDLeast" );
+			compound.set( "generic.attackDamage", "tag", "AttributeModifiers", null, "AttributeName" );
+			compound.set( "Attack Damage", "tag", "AttributeModifiers", 0, "Name" );
+			compound.set( "mainhand", "tag", "AttributeModifiers", 0, "Slot" );
+			compound.set( 0, "tag", "AttributeModifiers", 0, "Operation" );
+			compound.set( 20.0, "tag", "AttributeModifiers", 0, "Amount" );
+			compound.set( 99L, "tag", "AttributeModifiers", 0, "UUIDMost" );
+			compound.set( 77530600L, "tag", "AttributeModifiers", 0, "UUIDLeast" );
 
 			// To add another attribute
-			compound.set( "generic.attackKnockback", "AttributeModifiers", null, "AttributeName" );
-			compound.set( "Knockback", "AttributeModifiers", 1, "Name" );
-			compound.set( "mainhand", "AttributeModifiers", 1, "Slot" );
-			compound.set( 0, "AttributeModifiers", 1, "Operation" );
-			compound.set( 5.0, "AttributeModifiers", 1, "Amount" );
-			compound.set( 99L, "AttributeModifiers", 1, "UUIDMost" );
-			compound.set( 77530600L, "AttributeModifiers", 1, "UUIDLeast" );
+			compound.set( "generic.attackKnockback", "tag", "AttributeModifiers", null, "AttributeName" );
+			compound.set( "Knockback", "tag", "AttributeModifiers", 1, "Name" );
+			compound.set( "mainhand", "tag", "AttributeModifiers", 1, "Slot" );
+			compound.set( 0, "tag", "AttributeModifiers", 1, "Operation" );
+			compound.set( 5.0, "tag", "AttributeModifiers", 1, "Amount" );
+			compound.set( 99L, "tag", "AttributeModifiers", 1, "UUIDMost" );
+			compound.set( 77530600L, "tag", "AttributeModifiers", 1, "UUIDLeast" );
 
 			// A third attribute
-			compound.set( "generic.movementSpeed", "AttributeModifiers", null, "AttributeName" );
-			compound.set( "Movement", "AttributeModifiers", 2, "Name" );
-			compound.set( "mainhand", "AttributeModifiers", 2, "Slot" );
-			compound.set( 1, "AttributeModifiers", 2, "Operation" );
-			compound.set( 2.0, "AttributeModifiers", 2, "Amount" );
-			compound.set( 99L, "AttributeModifiers", 2, "UUIDMost" );
-			compound.set( 77530600L, "AttributeModifiers", 2, "UUIDLeast" );
+			compound.set( "generic.movementSpeed", "tag", "AttributeModifiers", null, "AttributeName" );
+			compound.set( "Movement", "tag", "AttributeModifiers", 2, "Name" );
+			compound.set( "mainhand", "tag", "AttributeModifiers", 2, "Slot" );
+			compound.set( 1, "tag", "AttributeModifiers", 2, "Operation" );
+			compound.set( 2.0, "tag", "AttributeModifiers", 2, "Amount" );
+			compound.set( 99L, "tag", "AttributeModifiers", 2, "UUIDMost" );
+			compound.set( 77530600L, "tag", "AttributeModifiers", 2, "UUIDLeast" );
 
 			// Now convert it back into an item
 			System.out.println( compound );
 			item = NBTEditor.getItemFromTag( compound );
 			System.out.println( item );
+			System.out.println( NBTEditor.getItemNBTTag( item ) );
+			
+			for ( Player p : Bukkit.getOnlinePlayers() ) {
+				p.getInventory().addItem( item );
+			}
 		}
         
 		ItemStack skull1 = NBTEditor.getHead( "http://textures.minecraft.net/texture/7fe9725c950472e469b9fccae32f61bcefebdb5ea9ce9c92d58171ffb7a336fe" );
