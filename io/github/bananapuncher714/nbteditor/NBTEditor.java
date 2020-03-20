@@ -32,7 +32,7 @@ import com.mojang.authlib.properties.Property;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.12
+ * @version 7.13
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -55,6 +55,7 @@ public final class NBTEditor {
 			classCache.put( "NBTBase", Class.forName( "net.minecraft.server." + VERSION + "." + "NBTBase" ) );
 			classCache.put( "NBTTagCompound", Class.forName( "net.minecraft.server." + VERSION + "." + "NBTTagCompound" ) );
 			classCache.put( "NBTTagList", Class.forName( "net.minecraft.server." + VERSION + "." + "NBTTagList" ) );
+			classCache.put( "MojangsonParser", Class.forName( "net.minecraft.server." + VERSION + "." + "MojangsonParser" ) );
 
 			classCache.put( "ItemStack", Class.forName( "net.minecraft.server." + VERSION + "." + "ItemStack" ) );
 			classCache.put( "CraftItemStack", Class.forName( "org.bukkit.craftbukkit." + VERSION + ".inventory." + "CraftItemStack" ) );
@@ -138,6 +139,8 @@ public final class NBTEditor {
 			methodCache.put( "getWorldHandle", getNMSClass( "CraftWorld" ).getMethod( "getHandle" ) );
 			
 			methodCache.put( "setGameProfile", getNMSClass( "TileEntitySkull" ).getMethod( "setGameProfile", GameProfile.class ) );
+			
+			methodCache.put( "loadNBTTagCompound", getNMSClass( "MojangsonParser" ).getMethod( "parse", String.class ) );
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -487,11 +490,13 @@ public final class NBTEditor {
 			Object count = getTag( tag, "Count" );
 			Object id = getTag( tag, "id" );
 			if ( count == null || id == null ) {
+				System.out.println( "Missing count and id" );
 				return null;
 			}
 			if ( count instanceof Byte && id instanceof String ) {
 				return ( ItemStack ) getMethod( "asBukkitCopy" ).invoke( null, createItemStack( tag ) );
 			}
+			System.out.println( count.getClass() + ":" + id.getClass() );
 			return null;
 		} catch ( Exception exception ) {
 			exception.printStackTrace();
@@ -932,7 +937,19 @@ public final class NBTEditor {
 		}
 		return object;
 	}
-
+	
+	/**
+	 * Load an NBTCompound from a String.
+	 * 
+	 * @param object
+	 * A String in json format.
+	 * @return
+	 * An NBTCompound from the String provided. May or may not be a valid ItemStack.
+	 */
+	public static NBTCompound getNBTCompound( String json ) {
+		return NBTCompound.fromJson( json );
+	}
+	
 	private static void setTag( Object tag, Object value, Object... keys ) throws Exception {
 		Object notCompound;
 		// Get the real value of what we want to set here
@@ -1092,6 +1109,25 @@ public final class NBTEditor {
 				setTag( tag, value, keys );
 			} catch ( Exception e ) {
 				e.printStackTrace();
+			}
+		}
+		
+		/**
+		 * The exact same as the toString method
+		 * 
+		 * @return
+		 * Convert the compound to a string.
+		 */
+		public String toJson() {
+			return tag.toString();
+		}
+
+		public static NBTCompound fromJson( String json ) {
+			try {
+				return new NBTCompound( getMethod( "loadNBTTagCompound" ).invoke( null, json ) );
+			} catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
+				e.printStackTrace();
+				return null;
 			}
 		}
 		

@@ -76,14 +76,23 @@ public class NBTEditorMain extends JavaPlugin implements Listener {
 			compound.set( 77530600L, "tag", "AttributeModifiers", 2, "UUIDLeast" );
 
 			// Now convert it back into an item
-			System.out.println( compound );
+			System.out.println( "Edited compound: " + compound );
 			item = NBTEditor.getItemFromTag( compound );
-			System.out.println( item );
-			System.out.println( NBTEditor.getItemNBTTag( item ) );
+			System.out.println( "Itemstack compound: " + NBTEditor.getItemNBTTag( item ) );
 			
 			for ( Player p : Bukkit.getOnlinePlayers() ) {
 				p.getInventory().addItem( item );
 			}
+			
+			String json = compound.toJson();
+			
+			System.out.println( "Json string: " + json );
+			
+			compound = NBTCompound.fromJson( json );
+			
+			System.out.println( "Deserialized compound: " + compound );
+			System.out.println( "Deserialized item: " + NBTEditor.getItemFromTag( compound ) );
+			
 		}
         
 		ItemStack skull1 = NBTEditor.getHead( "http://textures.minecraft.net/texture/7fe9725c950472e469b9fccae32f61bcefebdb5ea9ce9c92d58171ffb7a336fe" );
