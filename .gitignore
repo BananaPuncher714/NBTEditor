@@ -1,0 +1,12 @@
+# Eclipse project files
+.classpath
+.project
+.settings/
+target/
+
+# Generated javadocs
+doc/
+
+# Dependency reduced pom
+dependency-reduced-pom.xml
+
