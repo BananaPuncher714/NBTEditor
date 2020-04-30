@@ -6,9 +6,9 @@ View the original spigot resource page [here](https://www.spigotmc.org/threads/s
 ## Maven
 To use with maven, add this to your `pom.xml` under `dependencies`:
 ```xml
-		<dependency>
-			<groupId>io.github.bananapuncher714</groupId>
-			<artifactId>NBTEditor</artifactId>
-			<version>7.13</version>
-		</dependency>
+<dependency>
+    <groupId>io.github.bananapuncher714</groupId>
+    <artifactId>NBTEditor</artifactId>
+    <version>7.13</version>
+</dependency>
 ```

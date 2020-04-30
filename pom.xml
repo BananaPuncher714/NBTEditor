@@ -6,7 +6,7 @@
 	<artifactId>NBTEditor</artifactId>
 	<name>NBTEditor</name>
 	<description>Single class NBT editor for items, entities, and tile entities.</description>
-	<version>7.13</version>
+	<version>7.14</version>
 
 	<dependencies>
 		<dependency>

@@ -32,7 +32,7 @@ import com.mojang.authlib.properties.Property;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.13
+ * @version 7.14
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -649,7 +649,7 @@ public final class NBTEditor {
 	 * @return
 	 * An NBTCompound
 	 */
-	public static Object getBlockNBTTag( Block block, Object... keys ) {
+	public static NBTCompound getBlockNBTTag( Block block, Object... keys ) {
 		try {
 			if ( block == null || !getNMSClass( "CraftBlockState" ).isInstance( block.getState() ) ) {
 				return null;
@@ -755,7 +755,8 @@ public final class NBTEditor {
 		} else if ( object instanceof NBTCompound ) {
 			try {
 				return getTag( ( ( NBTCompound ) object ).tag, keys );
-			} catch ( Exception e ) {
+			} catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
+				e.printStackTrace();
 				return null;
 			}
 		} else {
@@ -932,6 +933,12 @@ public final class NBTEditor {
 			setEntityTag( ( Entity ) object, value, keys );
 		} else if ( object instanceof Block ) {
 			setBlockTag( ( Block ) object, value, keys );
+		} else if ( object instanceof NBTCompound ) {
+			try {
+				setTag( ( ( NBTCompound ) object ).tag, value, keys );
+			} catch ( InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
+				e.printStackTrace();
+			}
 		} else {
 			throw new IllegalArgumentException( "Object provided must be of type ItemStack, Entity, Block, or NBTCompound!" );
 		}
@@ -950,7 +957,22 @@ public final class NBTEditor {
 		return NBTCompound.fromJson( json );
 	}
 	
-	private static void setTag( Object tag, Object value, Object... keys ) throws Exception {
+	/**
+	 * Get an empty NBTCompound.
+	 * 
+	 * @return
+	 * A new NBTCompound that contains a NBTTagCompound object.
+	 */
+	public static NBTCompound getEmptyNBTCompound() {
+		try {
+			return new NBTCompound( getNMSClass( "NBTTagCompound" ).newInstance() );
+		} catch ( InstantiationException | IllegalAccessException e ) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	private static void setTag( Object tag, Object value, Object... keys ) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Object notCompound;
 		// Get the real value of what we want to set here
 		if ( value != null ) {
@@ -1018,7 +1040,7 @@ public final class NBTEditor {
 		}
 	}
 
-	private static NBTCompound getNBTTag( Object tag, Object...keys ) throws Exception {
+	private static NBTCompound getNBTTag( Object tag, Object...keys ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Object compound = tag;
 		
 		for ( Object key : keys ) {
@@ -1033,7 +1055,7 @@ public final class NBTEditor {
 		return new NBTCompound( compound );
 	}
 	
-	private static Object getTag( Object tag, Object... keys ) throws Exception {
+	private static Object getTag( Object tag, Object... keys ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		if ( keys.length == 0 ) {
 			return getTags( tag );
 		}
@@ -1099,7 +1121,7 @@ public final class NBTEditor {
 	 */
 	public static final class NBTCompound {
 		protected final Object tag;
-		
+
 		protected NBTCompound( @Nonnull Object tag ) {
 			this.tag = tag;
 		}
