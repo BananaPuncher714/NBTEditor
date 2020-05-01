@@ -9,6 +9,6 @@ To use with maven, add this to your `pom.xml` under `dependencies`:
 <dependency>
     <groupId>io.github.bananapuncher714</groupId>
     <artifactId>NBTEditor</artifactId>
-    <version>7.13</version>
+    <version>7.14</version>
 </dependency>
 ```
