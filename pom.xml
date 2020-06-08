@@ -6,7 +6,7 @@
 	<artifactId>NBTEditor</artifactId>
 	<name>NBTEditor</name>
 	<description>Single class NBT editor for items, entities, and tile entities.</description>
-	<version>7.14</version>
+	<version>7.15</version>
 
 	<distributionManagement>
 		<repository>
@@ -15,6 +15,13 @@
 			<url>https://maven.pkg.github.com/BananaPuncher714/NBTEditor</url>
 		</repository>
 	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<id>spigot-repo</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
