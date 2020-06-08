@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,7 +71,6 @@ public final class NBTEditor {
 
 			classCache.put( "TileEntitySkull", Class.forName( "net.minecraft.server." + VERSION + "." + "TileEntitySkull" ) );
 
-			// These aren't included with the Bukkit api
 			classCache.put( "GameProfile", Class.forName( "com.mojang.authlib.GameProfile" ) );
 			classCache.put( "Property", Class.forName( "com.mojang.authlib.properties.Property" ) );
 			classCache.put( "PropertyMap", Class.forName( "com.mojang.authlib.properties.PropertyMap" ) );
@@ -149,11 +147,11 @@ public final class NBTEditor {
 			methodCache.put( "getWorldHandle", getNMSClass( "CraftWorld" ).getMethod( "getHandle" ) );
 
 			methodCache.put( "setGameProfile", getNMSClass( "TileEntitySkull" ).getMethod( "setGameProfile", getNMSClass( "GameProfile" ) ) );
-			methodCache.put( "getProperties", getNMSClass( "Property" ).getMethod( "getProperties" ) );
+			methodCache.put( "getProperties", getNMSClass( "GameProfile" ).getMethod( "getProperties" ) );
 			methodCache.put( "getName", getNMSClass( "Property" ).getMethod( "getName" ) );
 			methodCache.put( "getValue", getNMSClass( "Property" ).getMethod( "getValue" ) );
-			methodCache.put( "put", getNMSClass( "PropertyMap" ).getMethod( "put", String.class, getNMSClass( "Property" ) ) );
 			methodCache.put( "values", getNMSClass( "PropertyMap" ).getMethod( "values" ) );
+			methodCache.put( "put", getNMSClass( "PropertyMap" ).getMethod( "put", Object.class, Object.class ) );
 
 			methodCache.put( "loadNBTTagCompound", getNMSClass( "MojangsonParser" ).getMethod( "parse", String.class ) );
 		} catch( Exception e ) {
@@ -773,7 +771,7 @@ public final class NBTEditor {
 			Object propertyMap = getMethod( "getProperties" ).invoke( profile );
 			Object textureProperty = getConstructor( getNMSClass( "Property" ) ).newInstance( "textures", new String( Base64.getEncoder().encode( String.format( "{textures:{SKIN:{\"url\":\"%s\"}}}", texture ).getBytes() ) ) );
 			getMethod( "put" ).invoke( propertyMap, "textures", textureProperty );
-
+			
 			Location location = block.getLocation();
 
 			Object blockPosition = getConstructor( getNMSClass( "BlockPosition" ) ).newInstance( location.getBlockX(), location.getBlockY(), location.getBlockZ() );
@@ -1024,7 +1022,6 @@ public final class NBTEditor {
 			e.printStackTrace();
 		}
 
-
 		return null;
 	}
 
@@ -1053,10 +1050,11 @@ public final class NBTEditor {
 		}
 
 		try {
-			if ( getNMSClass( "NBTTagCompound" ).isInstance( compound ) ) {
-				return getKeys( object, keys ).size();
-			} else if ( getNMSClass( "NBTTagList" ).isInstance( compound ) ) {
-				return ( int ) getMethod( "size" ).invoke( compound );
+			NBTCompound nbtCompound = getNBTTag( compound, keys );
+			if ( getNMSClass( "NBTTagCompound" ).isInstance( nbtCompound.tag ) ) {
+				return getKeys( nbtCompound ).size();
+			} else if ( getNMSClass( "NBTTagList" ).isInstance( nbtCompound.tag ) ) {
+				return ( int ) getMethod( "size" ).invoke( nbtCompound.tag );
 			}
 		} catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
 			e.printStackTrace();
