@@ -942,6 +942,20 @@ public final class NBTEditor {
 	}
 
 	/**
+	 * Gets a boolean from an object
+	 *
+	 * @param object
+	 * Must be an ItemStack, Entity, Block, or NBTCompound
+	 * @param keys
+	 * Keys in descending order
+	 * @return
+	 * a boolean or false if none is stored at the provided location
+	 */
+	public static boolean getBoolean( Object object, Object... keys ) {
+		return NBTEditor.getByte(object, keys) == new Integer(1).byteValue();
+	}
+
+	/**
 	 * Gets a byte array from an object
 	 * 
 	 * @param object
