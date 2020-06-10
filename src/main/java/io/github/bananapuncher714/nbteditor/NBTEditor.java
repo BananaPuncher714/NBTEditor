@@ -81,6 +81,7 @@ public final class NBTEditor {
 		NBTClasses = new HashMap< Class< ? >, Class< ? > >();
 		try {
 			NBTClasses.put( Byte.class, Class.forName( "net.minecraft.server." + VERSION + "." + "NBTTagByte" ) );
+			NBTClasses.put( Boolean.class, Class.forName( "net.minecraft.server." + VERSION + "." + "NBTTagByte" ) );
 			NBTClasses.put( String.class, Class.forName( "net.minecraft.server." + VERSION + "." + "NBTTagString" ) );
 			NBTClasses.put( Double.class, Class.forName( "net.minecraft.server." + VERSION + "." + "NBTTagDouble" ) );
 			NBTClasses.put( Integer.class, Class.forName( "net.minecraft.server." + VERSION + "." + "NBTTagInt" ) );
@@ -180,6 +181,7 @@ public final class NBTEditor {
 		constructorCache = new HashMap< Class< ? >, Constructor< ? > >();
 		try {
 			constructorCache.put( getNBTTag( Byte.class ), getNBTTag( Byte.class ).getDeclaredConstructor( byte.class ) );
+			constructorCache.put( getNBTTag( Boolean.class ), getNBTTag( Boolean.class ).getDeclaredConstructor( byte.class ) );
 			constructorCache.put( getNBTTag( String.class ), getNBTTag( String.class ).getDeclaredConstructor( String.class ) );
 			constructorCache.put( getNBTTag( Double.class ), getNBTTag( Double.class ).getDeclaredConstructor( double.class ) );
 			constructorCache.put( getNBTTag( Integer.class ), getNBTTag( Integer.class ).getDeclaredConstructor( int.class ) );
@@ -1133,7 +1135,13 @@ public final class NBTEditor {
 			} else if ( getNMSClass( "NBTTagList" ).isInstance( value ) || getNMSClass( "NBTTagCompound" ).isInstance( value ) ) {
 				notCompound = value;
 			} else {
-				notCompound = getConstructor( getNBTTag( value.getClass() ) ).newInstance( value );
+				final Object finalvalue;
+				if (value instanceof Boolean) {
+					finalvalue = (Boolean) value == true ? 1 : 0;
+				} else {
+					finalvalue = value;
+				}
+				notCompound = getConstructor( getNBTTag( finalvalue.getClass() ) ).newInstance( finalvalue );
 			}
 		} else {
 			notCompound = null;
