@@ -13,14 +13,14 @@ final class PluginTest {
         MockBukkit.load(Plugin.class);
     }
 
-    @Test
-    void test() {
-
-    }
-
     @AfterAll
     static void finish() {
         MockBukkit.unmock();
+    }
+
+    @Test
+    void test() {
+
     }
 
 }

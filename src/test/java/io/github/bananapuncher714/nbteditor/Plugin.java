@@ -21,13 +21,13 @@ public final class Plugin extends JavaPlugin {
     }
 
     @Override
-    public void onEnable() {
+    public void onDisable() {
 
     }
 
     @Override
-    public void onDisable() {
-        
+    public void onEnable() {
+
     }
 
 }
