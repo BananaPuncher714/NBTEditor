@@ -20,7 +20,6 @@ final class PluginTest {
 
     @Test
     void test() {
-        System.out.println("test");
     }
 
 }
