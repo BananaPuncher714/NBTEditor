@@ -86,12 +86,6 @@
             <artifactId>MockBukkit-v1.15</artifactId>
             <version>0.3.0</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>junit</artifactId>
-                    <groupId>junit</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
