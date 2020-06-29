@@ -15,4 +15,19 @@ public final class Plugin extends JavaPlugin {
         super(loader, description, dataFolder, file);
     }
 
+    @Override
+    public void onLoad() {
+
+    }
+
+    @Override
+    public void onEnable() {
+
+    }
+
+    @Override
+    public void onDisable() {
+        
+    }
+
 }
