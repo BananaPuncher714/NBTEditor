@@ -1,9 +1,9 @@
 package io.github.bananapuncher714.nbteditor;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
-import org.junit.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 final class PluginTest {
 
@@ -20,7 +20,7 @@ final class PluginTest {
 
     @Test
     void test() {
-
+        System.out.println("test");
     }
 
 }
