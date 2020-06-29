@@ -11,7 +11,8 @@ public final class Plugin extends JavaPlugin {
     public Plugin() {
     }
 
-    public Plugin(final @NotNull JavaPluginLoader loader, final @NotNull PluginDescriptionFile description, final @NotNull File dataFolder, final @NotNull File file) {
+    public Plugin(@NotNull final JavaPluginLoader loader, @NotNull final PluginDescriptionFile description,
+                  @NotNull final File dataFolder, @NotNull final File file) {
         super(loader, description, dataFolder, file);
     }
 
