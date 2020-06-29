@@ -15,9 +15,9 @@ jobs:
       with:
         java-version: 1.8
 
-    - uses: derongan/nmsaction@v1
-      with:
-        rev: 1.16.1
-
-    - name: Install nms into m2
-      run: mkdir -p $HOME/.m2/repository && cp -a nms-build/.m2/repository/. $HOME/.m2/repository
+#    - uses: derongan/nmsaction@v1
+#      with:
+#        rev: 1.16.1
+#
+#    - name: Install nms into m2
+#      run: mkdir -p $HOME/.m2/repository && cp -a nms-build/.m2/repository/. $HOME/.m2/repository
