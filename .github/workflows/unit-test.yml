@@ -1,6 +1,6 @@
 name: Java CI
 
-on: [push, pull]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -35,10 +35,10 @@ jobs:
         else
             ERROR='false'
         fi
-    - name: Searching Error
+    - name: Searching for Failure
       if: contains('${{ steps.test.outputs.ERROR }}', true)
       run: |
-        echo Error Found!
+        echo Error(s) Found!
         cd testserver
         cat error.txt
         exit 1
