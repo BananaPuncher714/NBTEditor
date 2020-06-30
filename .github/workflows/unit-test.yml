@@ -22,4 +22,4 @@ jobs:
     - name: Run tests
       run: ./start.sh $HOME/server/server.jar NBTEditor/target/NBTEditor-7.16-tests.jar
     - name: Check fail status
-      run: [ -e "$HOME/server/plugins/NBTEditorTest/error.txt" ] && cat $HOME/server/plugins/NBTEditorTest/error.txt && exit 1 || exit 0
+      run: if [ -e "$HOME/server/plugins/NBTEditorTest/error.txt" ]; then cat $HOME/server/plugins/NBTEditorTest/error.txt; exit 1; else exit 0; fi
