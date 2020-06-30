@@ -20,8 +20,9 @@ jobs:
     - name: Test
       id: test
       run: |
+        echo "Starting in $(pwd)"
         mkdir ~/work/NBTEditor/NBTEditor/testserver
-        cd root/.m2/repository/org/spigotmc/spigot
+        cd nms-build/.m2/repository/org/spigotmc/spigot
         find -type f -name '*-R0.1-SNAPSHOT.jar' -exec cp {} ~/work/NBTEditor/NBTEditor/testserver/server.jar \;
         cd ~/work/NBTEditor/NBTEditor/
         mkdir testserver/plugins
