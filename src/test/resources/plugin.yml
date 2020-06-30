@@ -1,0 +1,6 @@
+name: NBTEditorTest
+main: io.github.bananapuncher714.nbteditor.NBTEditorTestPlugin
+version: 1.0.0
+description: NBTEditor Test Plugin
+author: BananaPuncher714
+api-version: 1.13

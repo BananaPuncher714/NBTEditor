@@ -1,0 +1,25 @@
+name: Java CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - run: cat $HOME/.m2/settings.xml
+    - uses: bananapuncher714/nmsaction@v1.1
+      with:
+        rev: 1.15.1
+        out: $HOME/server/server.jar
+    - name: Build with Maven
+      run: mvn clean package
+    - name: Run tests
+      run: ./start.sh $HOME/server/server.jar NBTEditor/target/NBTEditor-7.16-tests.jar
+    - name: Check fail status
+      run: [ -e "$HOME/server/plugins/NBTEditorTest/error.txt" ] && cat $HOME/server/plugins/NBTEditorTest/error.txt && exit 1 || exit 0
