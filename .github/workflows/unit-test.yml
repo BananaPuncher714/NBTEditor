@@ -12,14 +12,30 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - run: cat $HOME/.m2/settings.xml
-    - uses: bananapuncher714/nmsaction@v1.1
-      with:
-        rev: 1.15.1
-        out: $HOME/server/server.jar
     - name: Build with Maven
       run: mvn clean package
-    - name: Run tests
-      run: chmod +x .github/workflows/start.sh; ./.github/workflows/start.sh $HOME/server/server.jar NBTEditor/target/NBTEditor-7.16-tests.jar
-    - name: Check fail status
-      run: if [ -e "$HOME/server/plugins/NBTEditorTest/error.txt" ]; then cat $HOME/server/plugins/NBTEditorTest/error.txt; exit 1; else exit 0; fi
+    - name: Test
+      id: test
+      run: |
+        cd ~/.m2/repository/org/spigotmc/spigot
+        mkdir ~/work/NBTEditor/NBTEditor/testserver
+        find -type f -name '*-R0.1-SNAPSHOT.jar' -exec cp {} ~/work/NBTEditor/NBTEditor/testserver/server.jar \;
+        cd ~/work/NBTEditor/NBTEditor/
+        mkdir testserver/plugins
+        cp target/NBTEditor-*-tests.jar testserver/plugins/
+        cd testserver
+        echo "eula=true" > eula.txt
+        java -jar server.jar
+        FILE=error.txt
+        if [ -e "$FILE" ]; then
+            ERROR='true'
+        else
+            ERROR='false'
+        fi
+    - name: Searching Error
+      if: contains('${{ steps.test.outputs.ERROR }}', true)
+      run: |
+        echo Error Found!
+        cd testserver
+        cat error.txt
+        exit 1
