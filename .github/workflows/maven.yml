@@ -1,0 +1,45 @@
+name: Java CI with Maven
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Build with Maven
+        run: |
+          mvn versions:set -DnewVersion=1.0-SNAPSHOT -B -ntp
+          mvn package -B -ntp -Ptest
+
+      - name: Test
+        id: test
+        run: |
+          cd ~/.m2/repository/org/spigotmc/spigot
+          find -type f -name '*-R0.1-SNAPSHOT.jar' -exec cp {} ~/work/NBTEditor/NBTEditor/testserver/server.jar \;
+          cd ~/work/NBTEditor/NBTEditor/
+          cp target/NBTEditor-1.0-SNAPSHOT.jar testserver/plugins/NBTEditor.jar
+          cd testserver
+          java -jar server.jar
+          FILE=error.txt
+          if test -f "$FILE"; then
+              ERROR='true'
+          else
+              ERROR='false'
+          fi
+
+      - name: Searching Error
+        if: contains('${{ steps.test.outputs.ERROR }}', true)
+        run: |
+          echo Error Found!
+          cd testserver
+          cat error.txt
+          exit 1

@@ -1,0 +1,3 @@
+main: io.github.bananapuncher714.nbteditor.NBTEditorTestPlugin
+version: ${project.version}
+name: NBTEditor
