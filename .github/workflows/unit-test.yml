@@ -35,4 +35,6 @@ jobs:
           echo "Error(s) Found:"
           cat testserver/error.txt
           exit 1
+        else
+          echo "No errors found"
         fi

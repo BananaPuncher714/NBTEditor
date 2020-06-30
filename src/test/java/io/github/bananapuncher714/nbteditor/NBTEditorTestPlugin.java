@@ -19,7 +19,6 @@ public final class NBTEditorTestPlugin extends JavaPlugin {
 				ItemTests::ensureItemCustomIntSetAndGet,
 				ItemTests::ensureItemCustomDoubleSetAndGet,
 				ItemTests::ensureItemCustomBooleanSetAndGet,
-				NBTEditorTestPlugin::guaranteeFail
 		};
 		
 		final List< AssertionError > exceptions = new ArrayList< AssertionError >();
@@ -50,9 +49,5 @@ public final class NBTEditorTestPlugin extends JavaPlugin {
 		} else {
 			getLogger().info( "Passed all tests!" );
 		}
-	}
-	
-	private static void guaranteeFail() {
-		assert false : "Guaranteed failure";
 	}
 }
