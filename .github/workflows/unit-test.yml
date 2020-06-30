@@ -17,7 +17,7 @@ jobs:
         rev: 1.16.1
     - name: Build with Maven
       run: mvn clean package
-    - name: Test
+    - name: Running Tests
       id: test
       run: |
         mkdir ~/work/NBTEditor/NBTEditor/testserver
@@ -28,17 +28,11 @@ jobs:
         cp target/NBTEditor-*-tests.jar testserver/plugins/
         cd testserver
         echo "eula=true" > eula.txt
-        echo stop | java -jar server.jar
-        FILE=error.txt
-        if [ -e "$FILE" ]; then
-            ERROR='true'
-        else
-            ERROR='false'
-        fi
+        echo stop | java -ea -jar server.jar
     - name: Searching for Failure
-      if: contains('${{ steps.test.outputs.ERROR }}', true)
       run: |
-        echo Error(s) Found!
-        cd testserver
-        cat error.txt
-        exit 1
+        if [ -e "testserver/error.txt" ]; then
+          echo "Error(s) Found:"
+          cat testserver/error.txt
+          exit 1
+        fi
