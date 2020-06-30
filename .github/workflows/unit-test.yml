@@ -1,6 +1,6 @@
 name: Java CI
 
-on: [push]
+on: [push, pull]
 
 jobs:
   build:
@@ -20,7 +20,6 @@ jobs:
     - name: Test
       id: test
       run: |
-        echo "Starting in $(pwd)"
         mkdir ~/work/NBTEditor/NBTEditor/testserver
         cd nms-build/.m2/repository/org/spigotmc/spigot
         find -type f -name '*-R0.1-SNAPSHOT.jar' -exec cp {} ~/work/NBTEditor/NBTEditor/testserver/server.jar \;
@@ -29,7 +28,7 @@ jobs:
         cp target/NBTEditor-*-tests.jar testserver/plugins/
         cd testserver
         echo "eula=true" > eula.txt
-        java -jar server.jar
+        echo stop | java -jar server.jar
         FILE=error.txt
         if [ -e "$FILE" ]; then
             ERROR='true'
