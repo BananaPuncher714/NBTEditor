@@ -13,8 +13,6 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nonnull;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -1226,7 +1224,18 @@ public final class NBTEditor {
 				}
 			}
 		} else {
+			// Add and replace all tags
 			if ( notCompound != null ) {
+				// Only if they're both an NBTTagCompound
+				// Can't do anything if its a list or something
+				if ( getNMSClass( "NBTTagCompound" ).isInstance( notCompound ) && getNMSClass( "NBTTagCompound" ).isInstance( compound ) )
+					for ( String key : getKeys( notCompound ) ) {
+						getMethod( "set" ).invoke( compound, key, getMethod( "get" ).invoke( notCompound, key ) );
+					}
+			} else {
+				// Did someone make an error?
+				// NBTEditor.set( something, null );
+				// Not sure what to do here
 			}
 		}
 	}
@@ -1313,7 +1322,7 @@ public final class NBTEditor {
 	public static final class NBTCompound {
 		protected final Object tag;
 
-		protected NBTCompound( @Nonnull Object tag ) {
+		protected NBTCompound( Object tag ) {
 			this.tag = tag;
 		}
 
