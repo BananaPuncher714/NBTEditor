@@ -28,7 +28,7 @@ import org.bukkit.inventory.meta.ItemMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.16
+ * @version 7.16.1
  * @author BananaPuncher714
  */
 public final class NBTEditor {
