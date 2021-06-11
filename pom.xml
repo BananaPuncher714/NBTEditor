@@ -7,7 +7,7 @@
     <artifactId>nbteditor</artifactId>
     <name>NBTEditor</name>
     <description>Single class NBT editor for items, entities, and tile entities.</description>
-    <version>7.16.1</version>
+    <version>7.17.0</version>
 
     <properties>
         <java.version>1.8</java.version>
@@ -67,7 +67,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>
-            <version>1.16.2-R0.1-SNAPSHOT</version>
+            <version>1.17-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
