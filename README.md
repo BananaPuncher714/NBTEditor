@@ -17,7 +17,7 @@ You'll need to include the [CodeMC](https://ci.codemc.io/) Maven repository too:
 ```xml
 <repository>
     <id>CodeMC</id>
-    <url>https://repo.codemc.org/repository/maven-public</url>
+    <url>https://repo.codemc.org/repository/maven-public/</url>
 </repository>
 ```
 
