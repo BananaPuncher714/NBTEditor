@@ -150,7 +150,7 @@ public final class NBTEditor {
 				methodCache.put( "setIndex", getNMSClass( "NBTTagList" ).getMethod( "a", int.class, getNMSClass( "NBTBase" ) ) );
 			}
 			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
-				methodCache.put( "getTypeId", getNMSClass( "NBTBase" ).getMethod( "b" ) );
+				methodCache.put( "getTypeId", getNMSClass( "NBTBase" ).getMethod( "a" ) );
 				methodCache.put( "add", getNMSClass( "NBTTagList" ).getMethod( "c", int.class, getNMSClass( "NBTBase" ) ) );
 			} else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
 				methodCache.put( "getTypeId", getNMSClass( "NBTBase" ).getMethod( "getTypeId" ) );
@@ -194,7 +194,7 @@ public final class NBTEditor {
 
 			methodCache.put( "getEntityHandle", getNMSClass( "CraftEntity" ).getMethod( "getHandle" ) );
 			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
-				methodCache.put( "getEntityTag", getNMSClass( "Entity" ).getMethod( "e", getNMSClass( "NBTTagCompound" ) ) );
+				methodCache.put( "getEntityTag", getNMSClass( "Entity" ).getMethod( "f", getNMSClass( "NBTTagCompound" ) ) );
 				methodCache.put( "setEntityTag", getNMSClass( "Entity" ).getMethod( "g", getNMSClass( "NBTTagCompound" ) ) );
 			} else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_16 ) ) {
 				methodCache.put( "getEntityTag", getNMSClass( "Entity" ).getMethod( "save", getNMSClass( "NBTTagCompound" ) ) );
@@ -236,7 +236,7 @@ public final class NBTEditor {
 			}
 			
 			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
-				methodCache.put( "getTileEntity", getNMSClass( "World" ).getMethod( "getBlockEntity", getNMSClass( "BlockPosition" ), boolean.class ) );
+				methodCache.put( "getTileEntity", getNMSClass( "World" ).getMethod( "c_", getNMSClass( "BlockPosition" ) ) );
 			} else {
 				methodCache.put( "getTileEntity", getNMSClass( "World" ).getMethod( "getTileEntity", getNMSClass( "BlockPosition" ) ) );
 			}
@@ -784,12 +784,7 @@ public final class NBTEditor {
 
 			Object nmsWorld = getMethod( "getWorldHandle" ).invoke( location.getWorld() );
 
-			Object tileEntity = null;
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
-				getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition, true );
-			} else {
-				getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
-			}
+			Object tileEntity = getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
 
 			Object tag;
 			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
@@ -827,12 +822,7 @@ public final class NBTEditor {
 
 			Object nmsWorld = getMethod( "getWorldHandle" ).invoke( location.getWorld() );
 
-			Object tileEntity = null;
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
-				getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition, true );
-			} else {
-				getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
-			}
+			Object tileEntity = getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
 
 			Object tag;
 			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
@@ -871,12 +861,7 @@ public final class NBTEditor {
 
 			Object nmsWorld = getMethod( "getWorldHandle" ).invoke( location.getWorld() );
 
-			Object tileEntity = null;
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
-				getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition, true );
-			} else {
-				getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
-			}
+			Object tileEntity = getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
 
 			Object tag;
 			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
