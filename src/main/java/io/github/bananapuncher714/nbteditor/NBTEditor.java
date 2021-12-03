@@ -28,7 +28,7 @@ import org.bukkit.inventory.meta.ItemMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.17.0
+ * @version 7.18.0
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -1311,7 +1311,7 @@ public final class NBTEditor {
 				}
 				if ( oldCompound.getClass().getSimpleName().equals( "NBTTagList" ) ) {
 					if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
-						getMethod( "add" ).invoke( oldCompound, getMethod( "size" ).invoke( oldCompound ), compound );
+						getMethod( "add" ).invoke( oldCompound, getMethod( "getTypeId" ).invoke( compound ), compound );
 					} else {
 						getMethod( "add" ).invoke( oldCompound, compound );
 					}
@@ -1324,7 +1324,7 @@ public final class NBTEditor {
 			Object lastKey = keys[ keys.length - 1 ];
 			if ( lastKey == null ) {
 				if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
-					getMethod( "add" ).invoke( compound, getMethod( "size" ).invoke( compound ), notCompound );
+					getMethod( "add" ).invoke( compound, getMethod( "getTypeId" ).invoke( notCompound ), notCompound );
 				} else {
 					getMethod( "add" ).invoke( compound, notCompound );
 				}
