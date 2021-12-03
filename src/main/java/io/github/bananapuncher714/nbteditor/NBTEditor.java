@@ -23,7 +23,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  * Sets/Gets NBT tags from ItemStacks 
- * Supports 1.8-1.16
+ * Supports 1.8-1.18
  * 
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
@@ -133,15 +133,26 @@ public final class NBTEditor {
 
 		methodCache = new HashMap< String, Method >();
 		try {
-			methodCache.put( "get", getNMSClass( "NBTTagCompound" ).getMethod( "get", String.class ) );
-			methodCache.put( "set", getNMSClass( "NBTTagCompound" ).getMethod( "set", String.class, getNMSClass( "NBTBase" ) ) );
-			methodCache.put( "hasKey", getNMSClass( "NBTTagCompound" ).getMethod( "hasKey", String.class ) );
-			if ( LOCAL_VERSION.lessThanOrEqualTo( MinecraftVersion.v1_16 ) ) {
-				methodCache.put( "setIndex", getNMSClass( "NBTTagList" ).getMethod( "a", int.class, getNMSClass( "NBTBase" ) ) );
+			if ( LOCAL_VERSION.lessThanOrEqualTo( MinecraftVersion.v1_17 ) ) {
+				methodCache.put( "get", getNMSClass( "NBTTagCompound" ).getMethod( "get", String.class ) );
+				methodCache.put( "set", getNMSClass( "NBTTagCompound" ).getMethod( "set", String.class, getNMSClass( "NBTBase" ) ) );
+				methodCache.put( "hasKey", getNMSClass( "NBTTagCompound" ).getMethod( "hasKey", String.class ) );
 			} else {
-				methodCache.put( "setIndex", getNMSClass( "NBTTagList" ).getMethod( "set", int.class, getNMSClass( "NBTBase" ) ) );
+				methodCache.put( "get", getNMSClass( "NBTTagCompound" ).getMethod( "c", String.class ) );
+				methodCache.put( "set", getNMSClass( "NBTTagCompound" ).getMethod( "a", String.class, getNMSClass( "NBTBase" ) ) );
+				methodCache.put( "hasKey", getNMSClass( "NBTTagCompound" ).getMethod( "e", String.class ) );
 			}
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "setIndex", getNMSClass( "NBTTagList" ).getMethod( "d", int.class, getNMSClass( "NBTBase" ) ) );
+			} else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_17 ) ) {
+				methodCache.put( "setIndex", getNMSClass( "NBTTagList" ).getMethod( "set", int.class, getNMSClass( "NBTBase" ) ) );
+			} else {
+				methodCache.put( "setIndex", getNMSClass( "NBTTagList" ).getMethod( "a", int.class, getNMSClass( "NBTBase" ) ) );
+			}
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "getTypeId", getNMSClass( "NBTBase" ).getMethod( "a" ) );
+				methodCache.put( "add", getNMSClass( "NBTTagList" ).getMethod( "c", int.class, getNMSClass( "NBTBase" ) ) );
+			} else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
 				methodCache.put( "getTypeId", getNMSClass( "NBTBase" ).getMethod( "getTypeId" ) );
 				methodCache.put( "add", getNMSClass( "NBTTagList" ).getMethod( "add", int.class, getNMSClass( "NBTBase" ) ) );
 			} else {
@@ -149,27 +160,43 @@ public final class NBTEditor {
 			}
 			methodCache.put( "size", getNMSClass( "NBTTagList" ).getMethod( "size" ) );
 
-			if ( LOCAL_VERSION == MinecraftVersion.v1_8 ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "listRemove", getNMSClass( "NBTTagList" ).getMethod( "c", int.class )  );
+			} else if ( LOCAL_VERSION == MinecraftVersion.v1_8 ) {
 				methodCache.put( "listRemove", getNMSClass( "NBTTagList" ).getMethod( "a", int.class )  );
 			} else {
 				methodCache.put( "listRemove", getNMSClass( "NBTTagList" ).getMethod( "remove", int.class )  );
 			}
-			methodCache.put( "remove", getNMSClass( "NBTTagCompound" ).getMethod( "remove", String.class ) );
-
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_13 ) ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "remove", getNMSClass( "NBTTagCompound" ).getMethod( "r", String.class ) );
+			} else {
+				methodCache.put( "remove", getNMSClass( "NBTTagCompound" ).getMethod( "remove", String.class ) );
+			}
+			if ( LOCAL_VERSION.lessThanOrEqualTo( MinecraftVersion.v1_12 ) ) {
+				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "c" ) );
+			} else if ( LOCAL_VERSION.lessThanOrEqualTo( MinecraftVersion.v1_17 ) ) {
 				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "getKeys" ) );
 			} else {
-				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "c" ) );
+				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "d" ) );
 			}
 
-			methodCache.put( "hasTag", getNMSClass( "ItemStack" ).getMethod( "hasTag" ) );
-			methodCache.put( "getTag", getNMSClass( "ItemStack" ).getMethod( "getTag" ) );
-			methodCache.put( "setTag", getNMSClass( "ItemStack" ).getMethod( "setTag", getNMSClass( "NBTTagCompound" ) ) );
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "hasTag", getNMSClass( "ItemStack" ).getMethod( "r" ) );
+				methodCache.put( "getTag", getNMSClass( "ItemStack" ).getMethod( "s" ) );
+				methodCache.put( "setTag", getNMSClass( "ItemStack" ).getMethod( "c", getNMSClass( "NBTTagCompound" ) ) );
+			} else {
+				methodCache.put( "hasTag", getNMSClass( "ItemStack" ).getMethod( "hasTag" ) );
+				methodCache.put( "getTag", getNMSClass( "ItemStack" ).getMethod( "getTag" ) );
+				methodCache.put( "setTag", getNMSClass( "ItemStack" ).getMethod( "setTag", getNMSClass( "NBTTagCompound" ) ) );
+			}
 			methodCache.put( "asNMSCopy", getNMSClass( "CraftItemStack" ).getMethod( "asNMSCopy", ItemStack.class ) );
 			methodCache.put( "asBukkitCopy", getNMSClass( "CraftItemStack" ).getMethod( "asBukkitCopy", getNMSClass( "ItemStack" ) ) );
 
 			methodCache.put( "getEntityHandle", getNMSClass( "CraftEntity" ).getMethod( "getHandle" ) );
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_16 ) ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "getEntityTag", getNMSClass( "Entity" ).getMethod( "f", getNMSClass( "NBTTagCompound" ) ) );
+				methodCache.put( "setEntityTag", getNMSClass( "Entity" ).getMethod( "g", getNMSClass( "NBTTagCompound" ) ) );
+			} else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_16 ) ) {
 				methodCache.put( "getEntityTag", getNMSClass( "Entity" ).getMethod( "save", getNMSClass( "NBTTagCompound" ) ) );
 				methodCache.put( "setEntityTag", getNMSClass( "Entity" ).getMethod( "load", getNMSClass( "NBTTagCompound" ) ) );
 			} else {
@@ -177,7 +204,11 @@ public final class NBTEditor {
 				methodCache.put( "setEntityTag", getNMSClass( "Entity" ).getMethod( "f", getNMSClass( "NBTTagCompound" ) ) );
 			}
 
-			methodCache.put( "save", getNMSClass( "ItemStack" ).getMethod( "save", getNMSClass( "NBTTagCompound" ) ) );
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "save", getNMSClass( "ItemStack" ).getMethod( "b", getNMSClass( "NBTTagCompound" ) ) );
+			} else {
+				methodCache.put( "save", getNMSClass( "ItemStack" ).getMethod( "save", getNMSClass( "NBTTagCompound" ) ) );
+			}
 
 			if ( LOCAL_VERSION.lessThanOrEqualTo( MinecraftVersion.v1_10 ) ) {
 				methodCache.put( "createStack", getNMSClass( "ItemStack" ).getMethod( "createStack", getNMSClass( "NBTTagCompound" ) ) );
@@ -185,7 +216,9 @@ public final class NBTEditor {
 				methodCache.put( "createStack", getNMSClass( "ItemStack" ).getMethod( "a", getNMSClass( "NBTTagCompound" ) ) );
 			}
 
-			if ( LOCAL_VERSION == MinecraftVersion.v1_16 ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "a", getNMSClass( "NBTTagCompound" ) ) );
+			} else if ( LOCAL_VERSION == MinecraftVersion.v1_16 ) {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "load", getNMSClass( "IBlockData" ), getNMSClass( "NBTTagCompound" ) ) );
 				methodCache.put( "getType", getNMSClass( "World" ).getMethod( "getType", getNMSClass( "BlockPosition" ) ) );
 			} else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_12 ) ) {
@@ -194,23 +227,37 @@ public final class NBTEditor {
 				methodCache.put( "setTileTag", getNMSClass( "TileEntity" ).getMethod( "a", getNMSClass( "NBTTagCompound" ) ) );
 			}
 			
-			if ( LOCAL_VERSION == MinecraftVersion.v1_8 ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "getTileTag", getNMSClass( "TileEntity" ).getMethod( "m" ) );
+			} else if ( LOCAL_VERSION == MinecraftVersion.v1_8 ) {
 				methodCache.put( "getTileTag", getNMSClass( "TileEntity" ).getMethod( "b", getNMSClass( "NBTTagCompound" ) ) );
 			} else {
 				methodCache.put( "getTileTag", getNMSClass( "TileEntity" ).getMethod( "save", getNMSClass( "NBTTagCompound" ) ) );
 			}
 			
-			methodCache.put( "getTileEntity", getNMSClass( "World" ).getMethod( "getTileEntity", getNMSClass( "BlockPosition" ) ) );
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "getTileEntity", getNMSClass( "World" ).getMethod( "c_", getNMSClass( "BlockPosition" ) ) );
+			} else {
+				methodCache.put( "getTileEntity", getNMSClass( "World" ).getMethod( "getTileEntity", getNMSClass( "BlockPosition" ) ) );
+			}
 			methodCache.put( "getWorldHandle", getNMSClass( "CraftWorld" ).getMethod( "getHandle" ) );
 
-			methodCache.put( "setGameProfile", getNMSClass( "TileEntitySkull" ).getMethod( "setGameProfile", getNMSClass( "GameProfile" ) ) );
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "setGameProfile", getNMSClass( "TileEntitySkull" ).getMethod( "a", getNMSClass( "GameProfile" ) ) );
+			} else {
+				methodCache.put( "setGameProfile", getNMSClass( "TileEntitySkull" ).getMethod( "setGameProfile", getNMSClass( "GameProfile" ) ) );
+			}
 			methodCache.put( "getProperties", getNMSClass( "GameProfile" ).getMethod( "getProperties" ) );
 			methodCache.put( "getName", getNMSClass( "Property" ).getMethod( "getName" ) );
 			methodCache.put( "getValue", getNMSClass( "Property" ).getMethod( "getValue" ) );
 			methodCache.put( "values", getNMSClass( "PropertyMap" ).getMethod( "values" ) );
 			methodCache.put( "put", getNMSClass( "PropertyMap" ).getMethod( "put", Object.class, Object.class ) );
-
-			methodCache.put( "loadNBTTagCompound", getNMSClass( "MojangsonParser" ).getMethod( "parse", String.class ) );
+			
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				methodCache.put( "loadNBTTagCompound", getNMSClass( "MojangsonParser" ).getMethod( "a", String.class ) );
+			} else {
+				methodCache.put( "loadNBTTagCompound", getNMSClass( "MojangsonParser" ).getMethod( "parse", String.class ) );
+			}
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -739,9 +786,13 @@ public final class NBTEditor {
 
 			Object tileEntity = getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
 
-			Object tag = getNMSClass( "NBTTagCompound" ).newInstance();
-
-			getMethod( "getTileTag" ).invoke( tileEntity, tag );
+			Object tag;
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				tag = getMethod( "getTileTag" ).invoke( tileEntity );
+			} else {
+				tag = getNMSClass( "NBTTagCompound" ).newInstance();
+				getMethod( "getTileTag" ).invoke( tileEntity, tag );
+			}
 
 			return tag;
 		} catch( Exception exception ) {
@@ -773,9 +824,13 @@ public final class NBTEditor {
 
 			Object tileEntity = getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
 
-			Object tag = getNMSClass( "NBTTagCompound" ).newInstance();
-
-			getMethod( "getTileTag" ).invoke( tileEntity, tag );
+			Object tag;
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				tag = getMethod( "getTileTag" ).invoke( tileEntity );
+			} else {
+				tag = getNMSClass( "NBTTagCompound" ).newInstance();
+				getMethod( "getTileTag" ).invoke( tileEntity, tag );
+			}
 
 			return getNBTTag( tag, keys );
 		} catch( Exception exception ) {
@@ -808,9 +863,13 @@ public final class NBTEditor {
 
 			Object tileEntity = getMethod( "getTileEntity" ).invoke( nmsWorld, blockPosition );
 
-			Object tag = getNMSClass( "NBTTagCompound" ).newInstance();
-
-			getMethod( "getTileTag" ).invoke( tileEntity, tag );
+			Object tag;
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+				tag = getMethod( "getTileTag" ).invoke( tileEntity );
+			} else {
+				tag = getNMSClass( "NBTTagCompound" ).newInstance();
+				getMethod( "getTileTag" ).invoke( tileEntity, tag );
+			}
 
 			if ( keys.length == 0 && value instanceof NBTCompound ) {
 				tag = ( ( NBTCompound ) value ).tag;
