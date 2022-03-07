@@ -180,7 +180,11 @@ public final class NBTEditor {
 				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "d" ) );
 			}
 
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18_2 ) ) {
+				methodCache.put( "hasTag", getNMSClass( "ItemStack" ).getMethod( "s" ) );
+				methodCache.put( "getTag", getNMSClass( "ItemStack" ).getMethod( "t" ) );
+				methodCache.put( "setTag", getNMSClass( "ItemStack" ).getMethod( "c", getNMSClass( "NBTTagCompound" ) ) );
+			} else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18 ) ) {
 				methodCache.put( "hasTag", getNMSClass( "ItemStack" ).getMethod( "r" ) );
 				methodCache.put( "getTag", getNMSClass( "ItemStack" ).getMethod( "s" ) );
 				methodCache.put( "setTag", getNMSClass( "ItemStack" ).getMethod( "c", getNMSClass( "NBTTagCompound" ) ) );
@@ -1515,8 +1519,9 @@ public final class NBTEditor {
 		v1_15( "1_15", 7 ),
 		v1_16( "1_16", 8 ),
 		v1_17( "1_17", 9 ),
-		v1_18( "1_18", 10 ),
-		v1_19( "1_19", 11 );
+		v1_18( "1_18_R1", 10 ),
+		v1_18_2( "1_18_R2", 11 ),
+		v1_19( "1_19", 12 );
 
 		private int order;
 		private String key;
