@@ -1402,7 +1402,13 @@ public final class NBTEditor {
 			} else if ( getNMSClass( "NBTTagCompound" ).isInstance( notCompound ) ) {
 				notCompound = getMethod( "get" ).invoke( notCompound, ( String ) key );
 			} else if ( getNMSClass( "NBTTagList" ).isInstance( notCompound ) ) {
-				notCompound = ( ( List< ? > ) NBTListData.get( notCompound ) ).get( ( int ) key );
+				int keyIndex = ( int ) key;
+				List< ? > tagList = ( List< ? > ) NBTListData.get( notCompound );
+				if ( keyIndex >= 0 && keyIndex < tagList.size() ) {
+					notCompound = tagList.get( keyIndex );
+				} else {
+					notCompound = null;
+				}
 			} else {
 				return getNBTVar( notCompound );
 			}
