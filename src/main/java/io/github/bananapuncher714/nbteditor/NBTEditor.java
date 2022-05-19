@@ -1303,7 +1303,13 @@ public final class NBTEditor {
 			Object key = keys[ index ];
 			Object oldCompound = compound;
 			if ( key instanceof Integer ) {
-				compound = ( ( List< ? > ) NBTListData.get( compound ) ).get( ( int ) key );
+				int keyIndex = ( int ) key;
+				List< ? > tagList = ( List< ? > ) NBTListData.get( compound );
+				if ( keyIndex >= 0 && keyIndex < tagList.size() ) {
+					compound = tagList.get( keyIndex );
+				} else {
+					compound = null;
+				}
 			} else if ( key != null ) {
 				compound = getMethod( "get" ).invoke( compound, ( String ) key );
 			}
@@ -1371,7 +1377,13 @@ public final class NBTEditor {
 			} else if ( getNMSClass( "NBTTagCompound" ).isInstance( compound ) ) {
 				compound = getMethod( "get" ).invoke( compound, ( String ) key );
 			} else if ( getNMSClass( "NBTTagList" ).isInstance( compound ) ) {
-				compound = ( ( List< ? > ) NBTListData.get( compound ) ).get( ( int ) key );
+				int keyIndex = ( int ) key;
+				List< ? > tagList = ( List< ? > ) NBTListData.get( compound );
+				if ( keyIndex >= 0 && keyIndex < tagList.size() ) {
+					compound = tagList.get( keyIndex );
+				} else {
+					compound = null;
+				}
 			}
 		}
 		return new NBTCompound( compound );
