@@ -1290,7 +1290,7 @@ public final class NBTEditor {
 	private static void setTag( Object tag, Object value, Object... keys ) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Object wrappedValue;
 		// Get the real value of what we want to set here
-		if ( value != null ) {
+		if ( value != null && value != Type.DELETE ) {
 			if ( value instanceof NBTCompound ) {
 				wrappedValue = ( ( NBTCompound ) value ).tag;
 			} else if ( getNMSClass( "NBTTagList" ).isInstance( value ) || getNMSClass( "NBTTagCompound" ).isInstance( value ) ) {
@@ -1311,7 +1311,7 @@ public final class NBTEditor {
 				}
 			}
 		} else {
-			wrappedValue = null;
+			wrappedValue = Type.DELETE;
 		}
 
 		Object compound = tag;
@@ -1355,13 +1355,13 @@ public final class NBTEditor {
 					getMethod( "add" ).invoke( compound, wrappedValue );
 				}
 			} else if ( lastKey instanceof Integer ) {
-				if ( wrappedValue == null || wrappedValue == Type.DELETE ) {
+				if ( wrappedValue == Type.DELETE ) {
 					getMethod( "listRemove" ).invoke( compound, ( int ) lastKey );
 				} else {
 					getMethod( "setIndex" ).invoke( compound, ( int ) lastKey, wrappedValue );
 				}
 			} else {
-				if ( wrappedValue == null || wrappedValue == Type.DELETE ) {
+				if ( wrappedValue == Type.DELETE ) {
 					getMethod( "remove" ).invoke( compound, ( String ) lastKey );
 				} else {
 					getMethod( "set" ).invoke( compound, ( String ) lastKey, wrappedValue );
