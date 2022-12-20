@@ -28,7 +28,7 @@ import org.bukkit.inventory.meta.ItemMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.18.3
+ * @version 7.18.4
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -179,11 +179,13 @@ public final class NBTEditor {
 				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "c" ) );
 			} else if ( LOCAL_VERSION.lessThanOrEqualTo( MinecraftVersion.v1_17 ) ) {
 				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "getKeys" ) );
-			} else {
+			} else if ( LOCAL_VERSION.lessThanOrEqualTo( MinecraftVersion.v1_19_R1 ) ){
 				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "d" ) );
+			} else {
+				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "e" ) );
 			}
 
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_19 ) ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_19_R1 ) ) {
 				methodCache.put( "hasTag", getNMSClass( "ItemStack" ).getMethod( "t" ) );
 				methodCache.put( "getTag", getNMSClass( "ItemStack" ).getMethod( "u" ) );
 				methodCache.put( "setTag", getNMSClass( "ItemStack" ).getMethod( "c", getNMSClass( "NBTTagCompound" ) ) );
@@ -1555,7 +1557,8 @@ public final class NBTEditor {
 		v1_17,
 		v1_18_R1,
 		v1_18_R2,
-		v1_19,
+		v1_19_R1,
+		v1_19_R2,
 		v1_20,
 		v1_21,
 		v1_22;
