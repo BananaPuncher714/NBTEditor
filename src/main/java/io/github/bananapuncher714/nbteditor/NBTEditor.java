@@ -185,7 +185,7 @@ public final class NBTEditor {
 				methodCache.put( "getKeys", getNMSClass( "NBTTagCompound" ).getMethod( "e" ) );
 			}
 
-			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20 ) ) {
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R1) ) {
 				methodCache.put( "hasTag", getNMSClass( "ItemStack" ).getMethod( "u" ) );
 				methodCache.put( "getTag", getNMSClass( "ItemStack" ).getMethod( "v" ) );
 				methodCache.put( "setTag", getNMSClass( "ItemStack" ).getMethod( "c", getNMSClass( "NBTTagCompound" ) ) );
@@ -265,11 +265,16 @@ public final class NBTEditor {
 				methodCache.put( "setGameProfile", getNMSClass( "TileEntitySkull" ).getMethod( "setGameProfile", getNMSClass( "GameProfile" ) ) );
 			}
 			methodCache.put( "getProperties", getNMSClass( "GameProfile" ).getMethod( "getProperties" ) );
-			methodCache.put( "getName", getNMSClass( "Property" ).getMethod( "getName" ) );
-			methodCache.put( "getValue", getNMSClass( "Property" ).getMethod( "getValue" ) );
+			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R2) ) {
+				methodCache.put("getName", getNMSClass("Property").getMethod("name"));
+				methodCache.put("getValue", getNMSClass("Property").getMethod("value"));
+			} else {
+				methodCache.put("getName", getNMSClass("Property").getMethod("getName"));
+				methodCache.put("getValue", getNMSClass("Property").getMethod("getValue"));
+			}
 			methodCache.put( "values", getNMSClass( "PropertyMap" ).getMethod( "values" ) );
 			methodCache.put( "put", getNMSClass( "PropertyMap" ).getMethod( "put", Object.class, Object.class ) );
-			
+
 			if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_18_R1 ) ) {
 				methodCache.put( "loadNBTTagCompound", getNMSClass( "MojangsonParser" ).getMethod( "a", String.class ) );
 			} else {
@@ -1564,7 +1569,8 @@ public final class NBTEditor {
 		v1_19_R1,
 		v1_19_R2,
 		v1_19_R3,
-		v1_20,
+		v1_20_R1,
+		v1_20_R2,
 		v1_21,
 		v1_22;
 
