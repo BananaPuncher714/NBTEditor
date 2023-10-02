@@ -9,7 +9,7 @@ Include this in your dependencies:
 <dependency>
     <groupId>io.github.bananapuncher714</groupId>
     <artifactId>nbteditor</artifactId>
-    <version>7.18.5</version>
+    <version>7.19.0</version>
 </dependency>
 ```
 
@@ -20,7 +20,6 @@ You'll need to include the [CodeMC](https://ci.codemc.io/) Maven repository too:
     <url>https://repo.codemc.org/repository/maven-public/</url>
 </repository>
 ```
-
 
 ### Github Packages
 Alternatively, if you choose, you can use Github Packages instead. Make sure to have an authentication token in your .m2/settings.xml for the id `github`. To use this project with maven, add this to your `pom.xml`:
