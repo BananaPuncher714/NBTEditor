@@ -79,7 +79,8 @@ public final class NBTEditor {
                 new ReflectionTarget.v1_19_R1().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_19_R2().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R1().setClassFetcher( NBTEditor::getNMSClass ),
-                new ReflectionTarget.v1_20_R2().setClassFetcher( NBTEditor::getNMSClass )
+                new ReflectionTarget.v1_20_R2().setClassFetcher( NBTEditor::getNMSClass ),
+                new ReflectionTarget.v1_20_R3().setClassFetcher( NBTEditor::getNMSClass )
         ) );
         
         for ( ReflectionTarget target : reflectionTargets ) {
@@ -1465,6 +1466,7 @@ public final class NBTEditor {
         v1_19_R3,
         v1_20_R1,
         v1_20_R2,
+        v1_20_R3,
         v1_21,
         v1_22;
 
@@ -1901,6 +1903,15 @@ public final class NBTEditor {
             protected v1_20_R2() {
                 super( MinecraftVersion.v1_20_R2 );
                 
+                addMethod( MethodId.getPropertyName, ClassId.Property, "name" );
+                addMethod( MethodId.getPropertyValue, ClassId.Property, "value" );
+            }
+        }
+
+        private static class v1_20_R3 extends ReflectionTarget {
+            protected v1_20_R3() {
+                super( MinecraftVersion.v1_20_R3 );
+
                 addMethod( MethodId.getPropertyName, ClassId.Property, "name" );
                 addMethod( MethodId.getPropertyValue, ClassId.Property, "value" );
             }
