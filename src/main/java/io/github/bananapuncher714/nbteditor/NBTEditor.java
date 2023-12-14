@@ -1912,6 +1912,7 @@ public final class NBTEditor {
             protected v1_20_R3() {
                 super( MinecraftVersion.v1_20_R3 );
 
+                addMethod( MethodId.getTileTag, ClassId.TileEntity, "o" );
                 addMethod( MethodId.getPropertyName, ClassId.Property, "name" );
                 addMethod( MethodId.getPropertyValue, ClassId.Property, "value" );
             }
