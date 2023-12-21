@@ -7,7 +7,7 @@
     <artifactId>nbteditor</artifactId>
     <name>NBTEditor</name>
     <description>Single class NBT editor for items, entities, and tile entities.</description>
-    <version>7.19.0</version>
+    <version>7.19.1</version>
 
     <properties>
         <java.version>1.8</java.version>
