@@ -33,7 +33,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.1
+ * @version 7.19.2
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -694,7 +694,7 @@ public final class NBTEditor {
                 tag = getMethod( MethodId.getTileTag ).invoke( tileEntity );
             } else {
                 tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
-                getMethod( MethodId.getTileEntity ).invoke( tileEntity, tag );
+                getMethod( MethodId.getTileTag ).invoke( tileEntity, tag );
             }
 
             return tag;
