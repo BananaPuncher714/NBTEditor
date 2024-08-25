@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.3
+ * @version 7.19.4
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -451,8 +452,7 @@ public final class NBTEditor {
             return null;
         }
         try {
-            Object stack = null;
-            stack = getMethod( MethodId.asNMSCopy ).invoke( null, item );
+            Object stack = getMethod( MethodId.asNMSCopy ).invoke( null, item );
 
             Object tag = null;
 
@@ -1124,6 +1124,9 @@ public final class NBTEditor {
         Object compound;
         if ( object instanceof ItemStack ) {
             compound = getCompound( ( ItemStack ) object );
+            List< Object > keyList = new ArrayList< Object >( Arrays.asList( keys ) );
+            keyList.add( 0, NBTEditor.ITEMSTACK_COMPONENTS );
+            keys = keyList.toArray();
         } else if ( object instanceof Entity ) {
             compound = getCompound( ( Entity ) object );
         } else if ( object instanceof Block ) {
@@ -1137,18 +1140,22 @@ public final class NBTEditor {
         try {
             NBTCompound nbtCompound = getNBTTag( compound, keys );
 
-            Object tag = nbtCompound.tag;
-            if ( getNMSClass( ClassId.NBTTagCompound ).isInstance( tag ) ) {
-                return ( Collection< String > ) getMethod( MethodId.compoundKeys ).invoke( tag );
+            if ( nbtCompound != null && nbtCompound.tag != null ) {
+                Object tag = nbtCompound.tag;
+                if ( getNMSClass( ClassId.NBTTagCompound ).isInstance( tag ) ) {
+                    return ( Collection< String > ) getMethod( MethodId.compoundKeys ).invoke( tag );
+                } else {
+                    return Collections.EMPTY_LIST;
+                }
             } else {
-                return null;
+                return Collections.EMPTY_LIST;
             }
 
         } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
             e.printStackTrace();
         }
 
-        return null;
+        return Collections.EMPTY_LIST;
     }
 
     /**
