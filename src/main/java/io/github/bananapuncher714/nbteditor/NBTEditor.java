@@ -35,7 +35,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.4
+ * @version 7.19.5
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -92,24 +92,9 @@ public final class NBTEditor {
                 new ReflectionTarget.v1_20_R1().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R2().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R3().setClassFetcher( NBTEditor::getNMSClass ),
-                new ReflectionTarget.v1_20_R4().setClassFetcher( NBTEditor::getNMSClass )
+                new ReflectionTarget.v1_20_R4().setClassFetcher( NBTEditor::getNMSClass ),
+                new ReflectionTarget.v1_21_R1().setClassFetcher( NBTEditor::getNMSClass )
         ) );
-        
-        for ( ReflectionTarget target : reflectionTargets ) {
-            if ( target.getVersion().lessThanOrEqualTo( LOCAL_VERSION ) ) {
-                try {
-                    Method method = target.fetchDeclaredMethod( MethodId.setCraftMetaSkullProfile );
-                    
-                    if ( method != null ) {
-                        methodCache.put( MethodId.setCraftMetaSkullProfile, method );
-                        
-                        break;
-                    }
-                } catch ( ClassNotFoundException | NoSuchMethodException | SecurityException e ) {
-                    e.printStackTrace();
-                }
-            }
-        }
         
         NBTClasses = new HashMap< Class< ? >, Class< ? > >();
         try {
@@ -253,6 +238,9 @@ public final class NBTEditor {
             }
         }
         
+        // Prevent any additional reflection lookups, since we know it doesn't exist
+        methodCache.put( name, null );
+        
         return null;
     }
 
@@ -369,9 +357,17 @@ public final class NBTEditor {
             e1.printStackTrace();
         }
 
-        if ( methodCache.containsKey( MethodId.setCraftMetaSkullProfile ) ) {
+        final Method setSkullResolvableProfile = getMethod( MethodId.setCraftMetaSkullResolvableProfile );
+        Method setSkullProfile = getMethod( MethodId.setCraftMetaSkullProfile );
+        if ( setSkullResolvableProfile != null ) {
             try {
-                getMethod( MethodId.setCraftMetaSkullProfile ).invoke( headMeta, profile );
+                setSkullResolvableProfile.invoke( headMeta, getConstructor( ClassId.ResolvableProfile ).newInstance( profile ) );
+            } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e ) {
+                e.printStackTrace();
+            }
+        } else if ( setSkullProfile != null ) {
+            try {
+                setSkullProfile.invoke( headMeta, profile );
             } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
                 e.printStackTrace();
             }
@@ -402,6 +398,12 @@ public final class NBTEditor {
         }
         try {
             Object profile = skullProfile.get( meta );
+            
+            if ( getNMSClass( ClassId.ResolvableProfile ).isInstance( profile ) ) {
+                final Method getGameProfile = getMethod( MethodId.getResolvableProfileGameProfile );
+                profile = getGameProfile.invoke( profile );
+            }
+            
             if ( profile == null ) {
                 return null;
             }
@@ -877,6 +879,7 @@ public final class NBTEditor {
 
             Object tileEntity = getMethod( MethodId.getTileEntity ).invoke( nmsWorld, blockPosition );
 
+            // TODO This may use the new ResolvableProfile in 1.21+
             if ( getNMSClass( ClassId.TileEntitySkull ).isInstance( tileEntity) ) {
                 getMethod( MethodId.setGameProfile ).invoke( tileEntity, profile );
             } else {
@@ -1662,7 +1665,8 @@ public final class NBTEditor {
         PropertyMap,
         CraftServer,
         MinecraftServer,
-        RegistryAccess
+        RegistryAccess,
+        ResolvableProfile
     }
     
     private enum MethodId {
@@ -1720,7 +1724,11 @@ public final class NBTEditor {
         registryAccess,
         
         // Introduced in 1.20.5
-        saveOptional
+        saveOptional,
+        
+        // Added in 1.21, some paper build
+        setCraftMetaSkullResolvableProfile,
+        getResolvableProfileGameProfile
     }
     
     private static abstract class ReflectionTarget implements Comparable< ReflectionTarget > {
@@ -1751,8 +1759,10 @@ public final class NBTEditor {
             classTargets.put( name, path );
         }
         
-        protected final void addMethod( MethodId name, ClassId clazz, String methodName, Object... params ) {
-            methodTargets.put( name, new MethodTarget( clazz, methodName, params) );
+        protected final MethodTarget addMethod( MethodId name, ClassId clazz, String methodName, Object... params ) {
+            MethodTarget newTarget = new MethodTarget( clazz, methodName, params );
+            methodTargets.put( name, newTarget );
+            return newTarget;
         }
         
         protected final void addConstructor( ClassId clazz, Object... params ) {
@@ -1764,17 +1774,6 @@ public final class NBTEditor {
             return className != null ? Class.forName( className ) : null;
         }
         
-        protected final Method fetchDeclaredMethod( MethodId name ) throws NoSuchMethodException, SecurityException, ClassNotFoundException {
-            MethodTarget target = methodTargets.get( name );
-            if ( target == null ) {
-                return null;
-            }
-            
-            Method method = findClass( target.clazz ).getDeclaredMethod( target.name, convert( target.params ) );
-            method.setAccessible( true );
-            return method;
-        }
-        
         protected final Method fetchMethod( MethodId name ) throws NoSuchMethodException, SecurityException, ClassNotFoundException {
             MethodTarget target = methodTargets.get( name );
             if ( target != null ) {
@@ -1783,9 +1782,17 @@ public final class NBTEditor {
                 try {
                     return clazz.getMethod( target.name, params );
                 } catch ( NoSuchMethodException e ) {
-                    Method method = clazz.getDeclaredMethod( target.name, params );
-                    method.setAccessible( true );
-                    return method;
+                    try {
+                        Method method = clazz.getDeclaredMethod( target.name, params );
+                        method.setAccessible( true );
+                        return method;
+                    } catch ( NoSuchMethodException e2 ) {
+                        if ( target.silent ) {
+                            return null;
+                        } else {
+                            throw e;
+                        }
+                    }
                 }
             } else {
                 return null;
@@ -1834,10 +1841,16 @@ public final class NBTEditor {
         
         private static class MethodTarget extends ConstructorTarget {
             final String name;
-
+            boolean silent = false;
+            
             public MethodTarget( ClassId clazz, String name, Object... params ) {
                 super( clazz, params );
                 this.name = name;
+            }
+            
+            public MethodTarget failSilently( boolean silent ) {
+                this.silent = silent;
+                return this;
             }
         }
         
@@ -1963,7 +1976,8 @@ public final class NBTEditor {
             protected v1_15() {
                 super( MinecraftVersion.v1_15 );
                 
-                addMethod( MethodId.setCraftMetaSkullProfile, ClassId.CraftMetaSkull, "setProfile", ClassId.GameProfile );
+                // Fail silently if this method does not exist in later versions
+                addMethod( MethodId.setCraftMetaSkullProfile, ClassId.CraftMetaSkull, "setProfile", ClassId.GameProfile ).failSilently( MinecraftVersion.v1_21_R1.lessThanOrEqualTo( LOCAL_VERSION ) );
             }
         }
         
@@ -2094,6 +2108,7 @@ public final class NBTEditor {
                 
                 addClass( ClassId.MinecraftServer, "net.minecraft.server.MinecraftServer" );
                 addClass( ClassId.RegistryAccess, "net.minecraft.core.HolderLookup$a" );
+                addClass( ClassId.ResolvableProfile, "net.minecraft.world.item.component.ResolvableProfile" );
                 
                 addMethod( MethodId.getServer, ClassId.CraftServer, "getServer" );
                 addMethod( MethodId.registryAccess, ClassId.MinecraftServer, "bc" );
@@ -2103,6 +2118,20 @@ public final class NBTEditor {
                 
                 addMethod( MethodId.getTileTag, ClassId.TileEntity, "b", ClassId.RegistryAccess );
                 addMethod( MethodId.setTileTag, ClassId.TileEntity, "a", ClassId.NBTTagCompound, ClassId.RegistryAccess );
+            }
+        }
+        
+        private static class v1_21_R1 extends ReflectionTarget {
+            protected v1_21_R1() {
+                super( MinecraftVersion.v1_21_R1 );
+                
+                addClass( ClassId.ResolvableProfile, "net.minecraft.world.item.component.ResolvableProfile" );
+                
+                // The old setProfile with GameProfile may be used, so fail silently if that's the case
+                addMethod( MethodId.setCraftMetaSkullResolvableProfile, ClassId.CraftMetaSkull, "setProfile", ClassId.ResolvableProfile ).failSilently( true );
+                addMethod( MethodId.getResolvableProfileGameProfile, ClassId.ResolvableProfile, "f" );
+                
+                addConstructor( ClassId.ResolvableProfile, ClassId.GameProfile );
             }
         }
     }
