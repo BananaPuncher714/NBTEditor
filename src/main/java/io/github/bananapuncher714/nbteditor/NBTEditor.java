@@ -35,7 +35,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.5
+ * @version 7.19.6
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -93,7 +93,8 @@ public final class NBTEditor {
                 new ReflectionTarget.v1_20_R2().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R3().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R4().setClassFetcher( NBTEditor::getNMSClass ),
-                new ReflectionTarget.v1_21_R1().setClassFetcher( NBTEditor::getNMSClass )
+                new ReflectionTarget.v1_21_R1().setClassFetcher( NBTEditor::getNMSClass ),
+                new ReflectionTarget.v1_21_R2().setClassFetcher( NBTEditor::getNMSClass )
         ) );
         
         NBTClasses = new HashMap< Class< ? >, Class< ? > >();
@@ -1599,6 +1600,7 @@ public final class NBTEditor {
         v1_20_R4,
         v1_20( false ),
         v1_21_R1,
+        v1_21_R2,
         v1_21( false ),
         v1_22;
 
@@ -2132,6 +2134,14 @@ public final class NBTEditor {
                 addMethod( MethodId.getResolvableProfileGameProfile, ClassId.ResolvableProfile, "f" );
                 
                 addConstructor( ClassId.ResolvableProfile, ClassId.GameProfile );
+            }
+        }
+        
+        private static class v1_21_R2 extends ReflectionTarget {
+            protected v1_21_R2() {
+                super( MinecraftVersion.v1_21_R2 );
+                
+                addMethod( MethodId.registryAccess, ClassId.MinecraftServer, "ba" );
             }
         }
     }
