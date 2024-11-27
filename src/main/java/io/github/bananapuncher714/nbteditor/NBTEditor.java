@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -1740,7 +1741,7 @@ public final class NBTEditor {
         private Function< ClassId, Class< ? > > classFetcher;
         
         private final Map< ClassId, String > classTargets = new HashMap< ClassId, String >();
-        private final Map< MethodId, MethodTarget > methodTargets = new HashMap< MethodId, MethodTarget >();
+        private final Map< MethodId, ConstructorTarget > methodTargets = new HashMap< MethodId, ConstructorTarget >();
         private final Map< ClassId, ConstructorTarget > constructorTargets = new HashMap< ClassId, ConstructorTarget >();
         
         protected ReflectionTarget( MinecraftVersion version ) {
@@ -1767,6 +1768,12 @@ public final class NBTEditor {
             return newTarget;
         }
         
+        protected final ReturnMethodTarget addMethod( MethodId name, ClassId clazz, ClassId returnType, Object... params ) {
+            ReturnMethodTarget newTarget = new ReturnMethodTarget( clazz, returnType, params );
+            methodTargets.put( name, newTarget );
+            return newTarget;
+        }
+        
         protected final void addConstructor( ClassId clazz, Object... params ) {
             constructorTargets.put( clazz, new ConstructorTarget( clazz, params ) );
         }
@@ -1777,8 +1784,9 @@ public final class NBTEditor {
         }
         
         protected final Method fetchMethod( MethodId name ) throws NoSuchMethodException, SecurityException, ClassNotFoundException {
-            MethodTarget target = methodTargets.get( name );
-            if ( target != null ) {
+            ConstructorTarget constructorTarget = methodTargets.get( name );
+            if ( constructorTarget instanceof MethodTarget ) {
+                MethodTarget target = ( MethodTarget ) constructorTarget;
                 Class< ? > clazz = findClass( target.clazz );
                 Class< ? >[] params = convert( target.params );
                 try {
@@ -1796,6 +1804,19 @@ public final class NBTEditor {
                         }
                     }
                 }
+            } else if ( constructorTarget instanceof ReturnMethodTarget ) {
+                ReturnMethodTarget target = ( ReturnMethodTarget ) constructorTarget;
+                Class< ? > clazz = findClass( target.clazz );
+                Class< ? > returnClazz = findClass( target.returnType );
+                Class< ? >[] params = convert( target.params );
+                
+                for ( Method method : clazz.getDeclaredMethods() ) {
+                    if ( method.getReturnType() == returnClazz && matches( method.getParameters(), params ) ) {
+                        method.setAccessible( true );
+                        return method;
+                    }
+                }
+                return null;
             } else {
                 return null;
             }
@@ -1804,6 +1825,19 @@ public final class NBTEditor {
         protected final Constructor< ? > fetchConstructor( ClassId name ) throws NoSuchMethodException, SecurityException, ClassNotFoundException {
             ConstructorTarget target = constructorTargets.get( name );
             return target != null ? findClass( target.clazz ).getConstructor( convert( target.params ) ) : null;
+        }
+        
+        private final boolean matches( Parameter[] params, Class< ? >[] find ) {
+            if ( params.length != find.length ) {
+                return false;
+            } else {
+                for ( int i = 0; i < params.length; ++i ) {
+                    if ( !find[ i ].isAssignableFrom( params[ i ].getType() ) ) {
+                        return false;
+                    }
+                }
+                return true;
+            }
         }
         
         private final Class< ? >[] convert( Object[] objects ) throws ClassNotFoundException {
@@ -1853,6 +1887,15 @@ public final class NBTEditor {
             public MethodTarget failSilently( boolean silent ) {
                 this.silent = silent;
                 return this;
+            }
+        }
+        
+        private static class ReturnMethodTarget extends ConstructorTarget {
+            final ClassId returnType;
+            
+            public ReturnMethodTarget( ClassId clazz, ClassId returnType, Object... params ) {
+                super( clazz, returnType );
+                this.returnType = returnType;
             }
         }
         
@@ -2132,6 +2175,11 @@ public final class NBTEditor {
                 // The old setProfile with GameProfile may be used, so fail silently if that's the case
                 addMethod( MethodId.setCraftMetaSkullResolvableProfile, ClassId.CraftMetaSkull, "setProfile", ClassId.ResolvableProfile ).failSilently( true );
                 addMethod( MethodId.getResolvableProfileGameProfile, ClassId.ResolvableProfile, "f" );
+                
+                // v1_21_R1 includes 1.21, 1.21.1 and 1.21.2
+                // but the IRegistryCustom.Dimensions method is different
+                // so, find it dynamically
+                addMethod( MethodId.registryAccess, ClassId.MinecraftServer, ClassId.RegistryAccess );
                 
                 addConstructor( ClassId.ResolvableProfile, ClassId.GameProfile );
             }
