@@ -1601,8 +1601,9 @@ public final class NBTEditor {
         v1_20_R4,
         v1_20( false ),
         v1_21_R1,
-        v1_21_R2,
         v1_21( false ),
+        v1_21_R2,
+        v1_21_3( false ),
         v1_22;
 
         private boolean implemented = true;
@@ -1628,10 +1629,14 @@ public final class NBTEditor {
             v = v.replace( '.', '_' );
             
             MinecraftVersion lastImplemented = null;
-            for ( MinecraftVersion k : MinecraftVersion.values() ) {
-                if ( k.implemented ) {
+            for ( int i = MinecraftVersion.values().length; i > 0; --i ) {
+                MinecraftVersion k = MinecraftVersion.values()[ i - 1 ];
+                if ( !k.implemented ) {
+                    lastImplemented = MinecraftVersion.values()[ i - 2 ];
+                } else {
                     lastImplemented = k;
                 }
+                
                 if ( v.contains( k.name().substring( 1 ) ) ) {
                     return lastImplemented;
                 }
