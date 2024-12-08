@@ -4,7 +4,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -36,7 +35,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.6
+ * @version 7.19.7
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -94,8 +93,7 @@ public final class NBTEditor {
                 new ReflectionTarget.v1_20_R2().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R3().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R4().setClassFetcher( NBTEditor::getNMSClass ),
-                new ReflectionTarget.v1_21_R1().setClassFetcher( NBTEditor::getNMSClass ),
-                new ReflectionTarget.v1_21_R2().setClassFetcher( NBTEditor::getNMSClass )
+                new ReflectionTarget.v1_21_R1().setClassFetcher( NBTEditor::getNMSClass )
         ) );
         
         NBTClasses = new HashMap< Class< ? >, Class< ? > >();
@@ -1604,6 +1602,8 @@ public final class NBTEditor {
         v1_21( false ),
         v1_21_R2,
         v1_21_3( false ),
+        v1_21_R3,
+        v1_21_4( false ),
         v1_22;
 
         private boolean implemented = true;
@@ -1628,17 +1628,24 @@ public final class NBTEditor {
         public static MinecraftVersion get( String v ) {
             v = v.replace( '.', '_' );
             
-            MinecraftVersion lastImplemented = null;
             for ( int i = MinecraftVersion.values().length; i > 0; --i ) {
                 MinecraftVersion k = MinecraftVersion.values()[ i - 1 ];
-                if ( !k.implemented ) {
-                    lastImplemented = MinecraftVersion.values()[ i - 2 ];
-                } else {
-                    lastImplemented = k;
-                }
                 
                 if ( v.contains( k.name().substring( 1 ) ) ) {
-                    return lastImplemented;
+                    return getLastImplemented( k );
+                }
+            }
+            
+            // Return the latest version if none was found
+            return MinecraftVersion.values()[ MinecraftVersion.values().length - 1 ];
+        }
+        
+        private static MinecraftVersion getLastImplemented( MinecraftVersion v ) {
+            for ( int i = v.ordinal(); i >= 0; --i ) {
+                MinecraftVersion version = MinecraftVersion.values()[ i ];
+                
+                if ( version.implemented ) {
+                    return version;
                 }
             }
             return null;
@@ -1674,7 +1681,8 @@ public final class NBTEditor {
         CraftServer,
         MinecraftServer,
         RegistryAccess,
-        ResolvableProfile
+        ResolvableProfile,
+        IRegistryCustomDimension
     }
     
     private enum MethodId {
@@ -1816,7 +1824,7 @@ public final class NBTEditor {
                 Class< ? >[] params = convert( target.params );
                 
                 for ( Method method : clazz.getDeclaredMethods() ) {
-                    if ( method.getReturnType() == returnClazz && matches( method.getParameters(), params ) ) {
+                    if ( method.getReturnType().equals( returnClazz ) && matches( method.getParameterTypes(), params ) ) {
                         method.setAccessible( true );
                         return method;
                     }
@@ -1832,12 +1840,12 @@ public final class NBTEditor {
             return target != null ? findClass( target.clazz ).getConstructor( convert( target.params ) ) : null;
         }
         
-        private final boolean matches( Parameter[] params, Class< ? >[] find ) {
+        private final boolean matches( Class< ? >[] params, Class< ? >[] find ) {
             if ( params.length != find.length ) {
                 return false;
             } else {
                 for ( int i = 0; i < params.length; ++i ) {
-                    if ( !find[ i ].isAssignableFrom( params[ i ].getType() ) ) {
+                    if ( !find[ i ].isAssignableFrom( params[ i ] ) ) {
                         return false;
                     }
                 }
@@ -1899,7 +1907,7 @@ public final class NBTEditor {
             final ClassId returnType;
             
             public ReturnMethodTarget( ClassId clazz, ClassId returnType, Object... params ) {
-                super( clazz, returnType );
+                super( clazz, params );
                 this.returnType = returnType;
             }
         }
@@ -2176,6 +2184,7 @@ public final class NBTEditor {
                 super( MinecraftVersion.v1_21_R1 );
                 
                 addClass( ClassId.ResolvableProfile, "net.minecraft.world.item.component.ResolvableProfile" );
+                addClass( ClassId.IRegistryCustomDimension, "net.minecraft.core.IRegistryCustom$Dimension" );
                 
                 // The old setProfile with GameProfile may be used, so fail silently if that's the case
                 addMethod( MethodId.setCraftMetaSkullResolvableProfile, ClassId.CraftMetaSkull, "setProfile", ClassId.ResolvableProfile ).failSilently( true );
@@ -2184,17 +2193,9 @@ public final class NBTEditor {
                 // v1_21_R1 includes 1.21, 1.21.1 and 1.21.2
                 // but the IRegistryCustom.Dimensions method is different
                 // so, find it dynamically
-                addMethod( MethodId.registryAccess, ClassId.MinecraftServer, ClassId.RegistryAccess );
+                addMethod( MethodId.registryAccess, ClassId.MinecraftServer, ClassId.IRegistryCustomDimension );
                 
                 addConstructor( ClassId.ResolvableProfile, ClassId.GameProfile );
-            }
-        }
-        
-        private static class v1_21_R2 extends ReflectionTarget {
-            protected v1_21_R2() {
-                super( MinecraftVersion.v1_21_R2 );
-                
-                addMethod( MethodId.registryAccess, ClassId.MinecraftServer, "ba" );
             }
         }
     }
