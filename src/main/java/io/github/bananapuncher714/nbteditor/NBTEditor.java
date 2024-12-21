@@ -448,7 +448,7 @@ public final class NBTEditor {
         try {
             Object compound = getCompound( item );
             
-            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && BUKKIT_VERSION.startsWith( "1.20.6" ) ) {
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && !BUKKIT_VERSION.startsWith( "1.20.4" ) && !BUKKIT_VERSION.startsWith( "1.20.5" ) ) {
                 compound = getMethod( MethodId.compoundGet ).invoke( compound, "components" );
             }
             
@@ -570,7 +570,7 @@ public final class NBTEditor {
             if ( keys.length == 0 && value instanceof NBTCompound ) {
                 tag = ( ( NBTCompound ) value ).tag;
             } else {
-                if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && BUKKIT_VERSION.startsWith( "1.20.6" ) ) {
+                if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && !BUKKIT_VERSION.startsWith( "1.20.4" ) && !BUKKIT_VERSION.startsWith( "1.20.5" ) ) {
                     List< Object > keyList = new ArrayList< Object >( Arrays.asList( keys ) );
                     keyList.add( 0, "components" );
                     keys = keyList.toArray();
@@ -579,7 +579,7 @@ public final class NBTEditor {
                 setTag( tag, value, keys );
             }
 
-            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && BUKKIT_VERSION.startsWith( "1.20.6" ) ) {
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && !BUKKIT_VERSION.startsWith( "1.20.4" ) && !BUKKIT_VERSION.startsWith( "1.20.5" ) ) {
                 return ( ItemStack ) getMethod( MethodId.asBukkitCopy ).invoke( null, createItemStack( tag ) );
             } else {
                 getMethod( MethodId.setItemTag ).invoke( stack, tag );
@@ -604,7 +604,7 @@ public final class NBTEditor {
             return null;
         }
         try {
-            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && BUKKIT_VERSION.startsWith( "1.20.6" ) ) {
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && !BUKKIT_VERSION.startsWith( "1.20.4" ) && !BUKKIT_VERSION.startsWith( "1.20.5" ) ) {
                 return ( ItemStack ) getMethod( MethodId.asBukkitCopy ).invoke( null, createItemStack( compound.tag ) );
             } else {                
                 Object tag = compound.tag;
@@ -2220,7 +2220,7 @@ public final class NBTEditor {
                 super( MinecraftVersion.v1_20_R4 );
                 
                 // 1.20.4 and 1.20.5 are also 1_20_R4 but do not have these methods
-                if ( BUKKIT_VERSION.startsWith( "1.20.6" ) ) {
+                if ( !BUKKIT_VERSION.startsWith( "1.20.4" ) && !BUKKIT_VERSION.startsWith( "1.20.5" ) ) {
                     addClass( ClassId.MinecraftServer, "net.minecraft.server.MinecraftServer" );
                     addClass( ClassId.RegistryAccess, "net.minecraft.core.HolderLookup$a" );
                     addClass( ClassId.ResolvableProfile, "net.minecraft.world.item.component.ResolvableProfile" );
