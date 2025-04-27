@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -35,7 +36,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.7
+ * @version 7.19.8
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -96,7 +97,8 @@ public final class NBTEditor {
                 new ReflectionTarget.v1_20_R2().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R3().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R4().setClassFetcher( NBTEditor::getNMSClass ),
-                new ReflectionTarget.v1_21_R1().setClassFetcher( NBTEditor::getNMSClass )
+                new ReflectionTarget.v1_21_R1().setClassFetcher( NBTEditor::getNMSClass ),
+                new ReflectionTarget.v1_21_R4().setClassFetcher( NBTEditor::getNMSClass )
         ) );
         
         NBTClasses = new HashMap< Class< ? >, Class< ? > >();
@@ -151,7 +153,22 @@ public final class NBTEditor {
 
         NBTTagFieldCache = new HashMap< Class< ? >, Field >();
         try {
-            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_17 ) ) {
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R4 ) ) {
+                NBTTagFieldCache.put( NBTClasses.get( Byte.class ), NBTClasses.get( Byte.class ).getDeclaredField( "v" ) );
+                NBTTagFieldCache.put( NBTClasses.get( Boolean.class ), NBTClasses.get( Boolean.class ).getDeclaredField( "v" ) );
+                NBTTagFieldCache.put( NBTClasses.get( String.class ), NBTClasses.get( String.class ).getDeclaredField( "b" ) );
+                NBTTagFieldCache.put( NBTClasses.get( Double.class ), NBTClasses.get( Double.class ).getDeclaredField( "c" ) );
+                NBTTagFieldCache.put( NBTClasses.get( Integer.class ), NBTClasses.get( Integer.class ).getDeclaredField( "b" ) );
+                NBTTagFieldCache.put( NBTClasses.get( Long.class ), NBTClasses.get( Long.class ).getDeclaredField( "b" ) );
+                NBTTagFieldCache.put( NBTClasses.get( Float.class ), NBTClasses.get( Float.class ).getDeclaredField( "c" ) );
+                NBTTagFieldCache.put( NBTClasses.get( Short.class ), NBTClasses.get( Short.class ).getDeclaredField( "b" ) );
+                NBTTagFieldCache.put( NBTClasses.get( Class.forName( "[B" ) ), NBTClasses.get( Class.forName( "[B" ) ).getDeclaredField( "c" ) );
+                NBTTagFieldCache.put( NBTClasses.get( Class.forName( "[I" ) ), NBTClasses.get( Class.forName( "[I" ) ).getDeclaredField( "c" ) );
+                
+                for ( Field field : NBTTagFieldCache.values() ) {
+                    field.setAccessible( true );
+                }                
+            } else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_17 ) ) {
                 NBTTagFieldCache.put( NBTClasses.get( Byte.class ), NBTClasses.get( Byte.class ).getDeclaredField( "x" ) );
                 NBTTagFieldCache.put( NBTClasses.get( Boolean.class ), NBTClasses.get( Boolean.class ).getDeclaredField( "x" ) );
                 NBTTagFieldCache.put( NBTClasses.get( String.class ), NBTClasses.get( String.class ).getDeclaredField( "A" ) );
@@ -178,7 +195,10 @@ public final class NBTEditor {
         }
 
         try {
-            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_17 ) ) {
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R4 ) ) {
+                NBTListData = getNMSClass( ClassId.NBTTagList ).getDeclaredField( "v" );
+                NBTCompoundMap = getNMSClass( ClassId.NBTTagCompound ).getDeclaredField( "x" );
+            } else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_17 ) ) {
                 NBTListData = getNMSClass( ClassId.NBTTagList ).getDeclaredField( "c" );
                 NBTCompoundMap = getNMSClass( ClassId.NBTTagCompound ).getDeclaredField( "x" );
             } else {
@@ -194,7 +214,7 @@ public final class NBTEditor {
             e.printStackTrace();
         }
     }
-
+    
     private static Constructor< ? > getNBTTagConstructor( Class< ? > primitiveType ) {
         return NBTConstructors.get( getNBTTag( primitiveType ) );
     }
@@ -307,7 +327,10 @@ public final class NBTEditor {
 
     // For some reason, 1.11 and 1.12 have a constructor for ItemStack that accepts an NBTTagCompound
     private static Object createItemStack( Object compound ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
-        if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
+        if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_4 ) ) {
+            Optional< ? > optional = ( Optional< ? > ) getMethod( MethodId.createStackOptional ).invoke( null, registryAccess(), compound );
+            return optional.get();
+        } else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
             Method createStack = getMethod( MethodId.createStack );
             if ( createStack.getParameterCount() == 2 ) {
                 // RegistryAccess, NBTagCompound
@@ -449,7 +472,10 @@ public final class NBTEditor {
             Object compound = getCompound( item );
             
             if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && !BUKKIT_VERSION.startsWith( "1.20.4" ) && !BUKKIT_VERSION.startsWith( "1.20.5" ) ) {
-                compound = getMethod( MethodId.compoundGet ).invoke( compound, "components" );
+                // Apply the components tag since all items should contain this if not already present, since 1.20.6
+                if ( keys.length > 0 && keys[ 0 ] != Type.ITEMSTACK_COMPONENTS ) {
+                    compound = getMethod( MethodId.compoundGet ).invoke( compound, "components" );
+                }
             }
             
             return getTag( compound, keys );
@@ -571,9 +597,12 @@ public final class NBTEditor {
                 tag = ( ( NBTCompound ) value ).tag;
             } else {
                 if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && !BUKKIT_VERSION.startsWith( "1.20.4" ) && !BUKKIT_VERSION.startsWith( "1.20.5" ) ) {
-                    List< Object > keyList = new ArrayList< Object >( Arrays.asList( keys ) );
-                    keyList.add( 0, "components" );
-                    keys = keyList.toArray();
+                    // Apply the components tag since all items should contain this if not already present, since 1.20.6
+                    if ( keys.length > 0 && keys[ 0 ] != Type.ITEMSTACK_COMPONENTS ) {
+                        List< Object > keyList = new ArrayList< Object >( Arrays.asList( keys ) );
+                        keyList.add( 0, "components" );
+                        keys = keyList.toArray();
+                    }
                 }
                 
                 setTag( tag, value, keys );
@@ -1665,6 +1694,8 @@ public final class NBTEditor {
         v1_21_3( false ),
         v1_21_R3,
         v1_21_4( false ),
+        v1_21_R4,
+        v1_21_5( false ),
         v1_22;
 
         private boolean implemented = true;
@@ -1805,7 +1836,10 @@ public final class NBTEditor {
         
         // Added in 1.21, some paper build
         setCraftMetaSkullResolvableProfile,
-        getResolvableProfileGameProfile
+        getResolvableProfileGameProfile,
+        
+        // Added in 1.21.5
+        createStackOptional
     }
     
     private static abstract class ReflectionTarget implements Comparable< ReflectionTarget > {
@@ -2260,6 +2294,19 @@ public final class NBTEditor {
                 addMethod( MethodId.registryAccess, ClassId.MinecraftServer, ClassId.IRegistryCustomDimension );
                 
                 addConstructor( ClassId.ResolvableProfile, ClassId.GameProfile );
+            }
+        }
+        
+        private static class v1_21_R4 extends ReflectionTarget {
+            protected v1_21_R4() {
+                super( MinecraftVersion.v1_21_R4 );
+                
+                addMethod( MethodId.compoundGet, ClassId.NBTTagCompound, "a", String.class );
+                
+                addMethod( MethodId.createStackOptional, ClassId.ItemStack, "a", ClassId.RegistryAccess, ClassId.NBTBase );
+                
+                addMethod( MethodId.listSet, ClassId.NBTTagList, "c", int.class, ClassId.NBTBase );
+                addMethod( MethodId.listAdd, ClassId.NBTTagList, "d", int.class, ClassId.NBTBase );
             }
         }
     }
