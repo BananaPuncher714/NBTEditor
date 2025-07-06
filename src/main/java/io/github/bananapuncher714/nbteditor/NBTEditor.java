@@ -36,7 +36,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.8
+ * @version 7.19.9
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -98,7 +98,8 @@ public final class NBTEditor {
                 new ReflectionTarget.v1_20_R3().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_20_R4().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_21_R1().setClassFetcher( NBTEditor::getNMSClass ),
-                new ReflectionTarget.v1_21_R4().setClassFetcher( NBTEditor::getNMSClass )
+                new ReflectionTarget.v1_21_R4().setClassFetcher( NBTEditor::getNMSClass ),
+                new ReflectionTarget.v1_21_R5().setClassFetcher( NBTEditor::getNMSClass )
         ) );
         
         NBTClasses = new HashMap< Class< ? >, Class< ? > >();
@@ -326,8 +327,10 @@ public final class NBTEditor {
     }
 
     // For some reason, 1.11 and 1.12 have a constructor for ItemStack that accepts an NBTTagCompound
-    private static Object createItemStack( Object compound ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
-        if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_4 ) ) {
+    private static Object createItemStack( Object compound ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException, NoSuchFieldException, SecurityException {
+        if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R5 ) ) {
+            return ReflectionTarget.v1_21_R5.getItemFrom( registryAccess(), compound );
+        } else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_4 ) ) {
             Optional< ? > optional = ( Optional< ? > ) getMethod( MethodId.createStackOptional ).invoke( null, registryAccess(), compound );
             return optional.get();
         } else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
@@ -441,8 +444,8 @@ public final class NBTEditor {
             if ( profile == null ) {
                 return null;
             }
-
-            Collection< Object > properties = ( Collection< Object > ) getMethod( MethodId.propertyValues ).invoke( getMethod( MethodId.getProperties ).invoke( profile ) );
+            
+            final Collection< Object > properties = ( Collection< Object > ) getMethod( MethodId.propertyValues ).invoke( getMethod( MethodId.getProperties ).invoke( profile ) );
             for ( Object prop : properties ) {
                 if ( "textures".equals( getMethod( MethodId.getPropertyName ).invoke( prop ) ) ) {
                     String texture = new String( Base64.getDecoder().decode( ( String ) getMethod( MethodId.getPropertyValue ).invoke( prop ) ) );
@@ -495,24 +498,27 @@ public final class NBTEditor {
 
             Object tag = null;
 
-            
-            Method saveOptional = null;
-            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
-                saveOptional = getMethod( MethodId.saveOptional );
-            }
-            
-            if ( saveOptional != null ) {
-                tag = saveOptional.invoke( stack, registryAccess() );
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R5 ) ) {
+                tag = ReflectionTarget.v1_21_R5.save( stack, registryAccess() );
             } else {
-                if ( getMethod( MethodId.itemHasTag ).invoke( stack ).equals( true ) ) {
-                    tag = getMethod( MethodId.getItemTag ).invoke( stack );
+                Method saveOptional = null;
+                if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
+                    saveOptional = getMethod( MethodId.saveOptional );
+                }
+                
+                if ( saveOptional != null ) {
+                    tag = saveOptional.invoke( stack, registryAccess() );
                 } else {
-                    tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
+                    if ( getMethod( MethodId.itemHasTag ).invoke( stack ).equals( true ) ) {
+                        tag = getMethod( MethodId.getItemTag ).invoke( stack );
+                    } else {
+                        tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
+                    }
                 }
             }
 
             return tag;
-        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException exception ) {
+        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
             return null;
         }
@@ -527,6 +533,8 @@ public final class NBTEditor {
      * Keys in descending order
      * @return
      * An NBTCompound
+     * @throws SecurityException 
+     * @throws NoSuchFieldException 
      */
     private static NBTCompound getItemNBTTag( ItemStack item, Object... keys ) {
         if ( item == null ) {
@@ -538,19 +546,23 @@ public final class NBTEditor {
 
             Object tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
             
-            Method saveOptional = null;
-            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
-                saveOptional = getMethod( MethodId.saveOptional );
-            }
-            
-            if ( saveOptional != null ) {
-                tag = saveOptional.invoke( stack, registryAccess() );
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R5 ) ) {
+                tag = ReflectionTarget.v1_21_R5.save( stack, registryAccess() );
             } else {
-                tag = getMethod( MethodId.itemSave ).invoke( stack, tag );                                
+                Method saveOptional = null;
+                if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
+                    saveOptional = getMethod( MethodId.saveOptional );
+                }
+                
+                if ( saveOptional != null ) {
+                    tag = saveOptional.invoke( stack, registryAccess() );
+                } else {
+                    tag = getMethod( MethodId.itemSave ).invoke( stack, tag );                                
+                }
             }
 
             return getNBTTag( tag, keys );
-        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException exception ) {
+        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
             return null;
         }
@@ -568,6 +580,8 @@ public final class NBTEditor {
      * The keys to set, String for NBTCompound, int or null for an NBTTagList
      * @return
      * A new ItemStack with the updated NBT tags
+     * @throws SecurityException 
+     * @throws NoSuchFieldException 
      */
     private static ItemStack setItemTag( ItemStack item, Object value, Object... keys ) {
         if ( item == null ) {
@@ -578,18 +592,22 @@ public final class NBTEditor {
 
             Object tag = null;
 
-            Method saveOptional = null;
-            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
-                saveOptional = getMethod( MethodId.saveOptional );
-            }
-            
-            if ( saveOptional != null ) {
-                tag = saveOptional.invoke( stack, registryAccess() );
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R5 ) ) {
+                tag = ReflectionTarget.v1_21_R5.save( stack, registryAccess() );
             } else {
-                if ( getMethod( MethodId.itemHasTag ).invoke( stack ).equals( true ) ) {
-                    tag = getMethod( MethodId.getItemTag ).invoke( stack );
+                Method saveOptional = null;
+                if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
+                    saveOptional = getMethod( MethodId.saveOptional );
+                }
+                
+                if ( saveOptional != null ) {
+                    tag = saveOptional.invoke( stack, registryAccess() );
                 } else {
-                    tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
+                    if ( getMethod( MethodId.itemHasTag ).invoke( stack ).equals( true ) ) {
+                        tag = getMethod( MethodId.getItemTag ).invoke( stack );
+                    } else {
+                        tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
+                    }
                 }
             }
 
@@ -614,7 +632,7 @@ public final class NBTEditor {
                 getMethod( MethodId.setItemTag ).invoke( stack, tag );
                 return ( ItemStack ) getMethod( MethodId.asBukkitCopy ).invoke( null, stack );
             }
-        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException exception ) {
+        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
             return null;
         }
@@ -647,7 +665,7 @@ public final class NBTEditor {
                 }
                 return null;
             }
-        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException exception ) {
+        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
             return null;
         }
@@ -680,13 +698,21 @@ public final class NBTEditor {
         }
         try {
             Object NMSEntity = getMethod( MethodId.getEntityHandle ).invoke( entity );
-
-            Object tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
-
-            getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tag );
-
-            return tag;
-        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException exception ) {
+            
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R5 ) ) {
+                final Object tagValueOutput = ReflectionTarget.v1_21_R5.newTagValueOutput( registryAccess() );
+                
+                getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tagValueOutput );
+                
+                return getMethod( MethodId.convertToNbtTagCompound ).invoke( tagValueOutput );
+            } else {
+                Object tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
+            
+                getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tag );
+                
+                return tag;
+            }
+        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
             return null;
         }
@@ -709,12 +735,23 @@ public final class NBTEditor {
         try {
             Object NMSEntity = getMethod( MethodId.getEntityHandle ).invoke( entity );
 
-            Object tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
-
+            Object tag;
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R5 ) ) {
+                final Object tagValueOutput = ReflectionTarget.v1_21_R5.newTagValueOutput( registryAccess() );
+                
+                getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tagValueOutput );
+                
+                tag = getMethod( MethodId.convertToNbtTagCompound ).invoke( tagValueOutput );
+            } else {
+                tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
+         
+                getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tag );
+            }
+            
             getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tag );
 
             return getNBTTag( tag, keys );
-        } catch ( IllegalAccessException | InstantiationException | IllegalArgumentException | InvocationTargetException exception ) {
+        } catch ( IllegalAccessException | InstantiationException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
             return null;
         }
@@ -738,9 +775,18 @@ public final class NBTEditor {
         try {
             Object NMSEntity = getMethod( MethodId.getEntityHandle ).invoke( entity );
 
-            Object tag = getNMSClass( ClassId.NBTTagCompound ).newInstance() ;
-
-            getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tag );
+            Object tag;
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R5 ) ) {
+                final Object tagValueOutput = ReflectionTarget.v1_21_R5.newTagValueOutput( registryAccess() );
+                
+                getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tagValueOutput );
+                
+                tag = getMethod( MethodId.convertToNbtTagCompound ).invoke( tagValueOutput );
+            } else {
+                tag = getNMSClass( ClassId.NBTTagCompound ).newInstance();
+         
+                getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tag );
+            }
 
             if ( keys.length == 0 && value instanceof NBTCompound ) {
                 tag = ( ( NBTCompound ) value ).tag;
@@ -749,7 +795,7 @@ public final class NBTEditor {
             }
 
             getMethod( MethodId.setEntityTag ).invoke( NMSEntity, tag );
-        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException exception ) {
+        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
         }
     }
@@ -921,7 +967,11 @@ public final class NBTEditor {
                 setTag( tag, value, keys );
             }
 
-            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R5 ) ) {
+                Method setTileTag = getMethod( MethodId.setTileTag );
+                
+                setTileTag.invoke( tileEntity, ReflectionTarget.v1_21_R5.getValueInputFromNbtTagCompound( registryAccess(), tag ) );
+            } else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
                 Method setTileTag = getMethod( MethodId.setTileTag );
                 if ( setTileTag.getParameterCount() == 2 ) {
                     // NBTTagCompound, RegistryAccess
@@ -935,7 +985,7 @@ public final class NBTEditor {
             } else {
                 getMethod( MethodId.setTileTag ).invoke( tileEntity, tag );
             }
-        } catch( IllegalAccessException | InstantiationException | IllegalArgumentException | InvocationTargetException exception ) {
+        } catch( IllegalAccessException | InstantiationException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
         }
     }
@@ -1696,6 +1746,9 @@ public final class NBTEditor {
         v1_21_4( false ),
         v1_21_R4,
         v1_21_5( false ),
+        v1_21_R5,
+        v1_21_6( false ),
+        v1_21_7( false ),
         v1_22;
 
         private boolean implemented = true;
@@ -1774,7 +1827,17 @@ public final class NBTEditor {
         MinecraftServer,
         RegistryAccess,
         ResolvableProfile,
-        IRegistryCustomDimension
+        IRegistryCustomDimension,
+        Codec,
+        NbtOps,
+        DataResult,
+        DynamicOps,
+        TagValueInput,
+        TagValueOutput,
+        ValueInput,
+        ValueOutput,
+        ProblemReporter,
+        ValueInputContextHelper
     }
     
     private enum MethodId {
@@ -1839,7 +1902,15 @@ public final class NBTEditor {
         getResolvableProfileGameProfile,
         
         // Added in 1.21.5
-        createStackOptional
+        createStackOptional,
+        
+        // Used in 1.21.6
+        decoderParse,
+        createSerializationContext,
+        encoderEncodeStart,
+        getOrThrow,
+        createTagValueOutput,
+        convertToNbtTagCompound
     }
     
     private static abstract class ReflectionTarget implements Comparable< ReflectionTarget > {
@@ -1931,8 +2002,12 @@ public final class NBTEditor {
         }
         
         protected final Constructor< ? > fetchConstructor( ClassId name ) throws NoSuchMethodException, SecurityException, ClassNotFoundException {
-            ConstructorTarget target = constructorTargets.get( name );
-            return target != null ? findClass( target.clazz ).getConstructor( convert( target.params ) ) : null;
+            final ConstructorTarget target = constructorTargets.get( name );
+            final Constructor< ? > constructor = target != null ? findClass( target.clazz ).getDeclaredConstructor( convert( target.params ) ) : null;
+            if ( constructor != null ) {
+                constructor.setAccessible( true );
+            }
+            return constructor;
         }
         
         private final boolean matches( Class< ? >[] params, Class< ? >[] find ) {
@@ -2307,6 +2382,82 @@ public final class NBTEditor {
                 
                 addMethod( MethodId.listSet, ClassId.NBTTagList, "c", int.class, ClassId.NBTBase );
                 addMethod( MethodId.listAdd, ClassId.NBTTagList, "d", int.class, ClassId.NBTBase );
+                
+                addMethod( MethodId.setEntityTag, ClassId.Entity, "i", ClassId.NBTTagCompound );
+            }
+        }
+        
+        private static class v1_21_R5 extends ReflectionTarget {
+            private static Object ITEMSTACK_CODEC;
+            private static Object NBT_OPS;
+            private static Object PROBLEM_REPORTER;
+            
+            protected v1_21_R5() {
+                super( MinecraftVersion.v1_21_R5 );
+                
+                addClass( ClassId.DataResult, "com.mojang.serialization.DataResult" );
+                addClass( ClassId.Codec, "com.mojang.serialization.Codec" );
+                addClass( ClassId.DynamicOps, "com.mojang.serialization.DynamicOps" );
+                addClass( ClassId.NbtOps, "net.minecraft.nbt.DynamicOpsNBT" );
+                addClass( ClassId.ValueInput, "net.minecraft.world.level.storage.ValueInput" );
+                addClass( ClassId.TagValueInput, "net.minecraft.world.level.storage.TagValueInput" );
+                addClass( ClassId.ValueOutput, "net.minecraft.world.level.storage.ValueOutput" );
+                addClass( ClassId.TagValueOutput, "net.minecraft.world.level.storage.TagValueOutput" );
+                addClass( ClassId.ValueInputContextHelper, "net.minecraft.world.level.storage.ValueInputContextHelper" );
+                addClass( ClassId.ProblemReporter, "net.minecraft.util.ProblemReporter" );
+                
+                addMethod( MethodId.decoderParse, ClassId.Codec, "parse", ClassId.DynamicOps, Object.class );
+                addMethod( MethodId.encoderEncodeStart, ClassId.Codec, "encodeStart", ClassId.DynamicOps, Object.class );
+                addMethod( MethodId.createSerializationContext, ClassId.RegistryAccess, "a", ClassId.DynamicOps );
+                addMethod( MethodId.getOrThrow, ClassId.DataResult, "getOrThrow" );
+                addMethod( MethodId.createTagValueOutput, ClassId.TagValueOutput, "a", ClassId.ProblemReporter, ClassId.RegistryAccess );
+                addMethod( MethodId.convertToNbtTagCompound, ClassId.TagValueOutput, "b" );
+                
+                addMethod( MethodId.getResolvableProfileGameProfile, ClassId.ResolvableProfile, "g" );
+                addMethod( MethodId.setTileTag, ClassId.TileEntity, "b", ClassId.ValueInput );
+                addMethod( MethodId.getEntityTag, ClassId.Entity, "b", ClassId.ValueOutput );
+                addMethod( MethodId.setEntityTag, ClassId.Entity, "e", ClassId.ValueInput );
+                
+                addConstructor( ClassId.ValueInputContextHelper, ClassId.RegistryAccess, ClassId.DynamicOps );
+                addConstructor( ClassId.TagValueInput, ClassId.ProblemReporter, ClassId.ValueInputContextHelper, ClassId.NBTTagCompound );
+            }
+            
+            private static Object getItemStackCodec() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+                if ( ITEMSTACK_CODEC == null ) {
+                    ITEMSTACK_CODEC = getNMSClass( ClassId.ItemStack ).getField( "b" ).get( null );
+                }
+                return ITEMSTACK_CODEC;
+            }
+            
+            private static Object getNbtOps() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+                if ( NBT_OPS == null ) {
+                    NBT_OPS = getNMSClass( ClassId.NbtOps ).getField( "a" ).get( null );
+                }
+                return NBT_OPS;
+            }
+            
+            private static Object getProblemReporter() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+                if ( PROBLEM_REPORTER == null ) {
+                    PROBLEM_REPORTER = getNMSClass( ClassId.ProblemReporter ).getField( "a" ).get( null );
+                }
+                return PROBLEM_REPORTER;
+            }
+            
+            protected static Object newTagValueOutput( final Object registryAccess ) throws IllegalAccessException, InvocationTargetException, IllegalArgumentException, NoSuchFieldException, SecurityException {
+                return getMethod( MethodId.createTagValueOutput ).invoke( null, getProblemReporter(), registryAccess );
+            }
+            
+            protected static Object getValueInputFromNbtTagCompound( final Object registryAccess, final Object compound ) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException {
+                final Object contextHelper = getConstructor( ClassId.ValueInputContextHelper ).newInstance( registryAccess, getNbtOps() );
+                return getConstructor( ClassId.TagValueInput ).newInstance( getProblemReporter(), contextHelper, compound );
+            }
+            
+            protected static Object getItemFrom( final Object registryAccess, final Object compound ) throws IllegalAccessException, InvocationTargetException, IllegalArgumentException, NoSuchFieldException, SecurityException {
+                return getMethod( MethodId.getOrThrow ).invoke( getMethod( MethodId.decoderParse ).invoke( getItemStackCodec(), getMethod( MethodId.createSerializationContext ).invoke( registryAccess, getNbtOps() ), compound ) );
+            }
+            
+            protected static Object save( final Object item, final Object registryAccess ) throws IllegalAccessException, InvocationTargetException, IllegalArgumentException, NoSuchFieldException, SecurityException {
+                return getMethod( MethodId.getOrThrow ).invoke( getMethod( MethodId.encoderEncodeStart ).invoke( getItemStackCodec(), getMethod( MethodId.createSerializationContext ).invoke( registryAccess, getNbtOps() ), item ) );
             }
         }
     }
