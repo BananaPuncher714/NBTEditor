@@ -489,6 +489,7 @@ public final class NBTEditor {
     }
 
     // Gets the NBTTagCompound
+    @SuppressWarnings( "deprecation" )
     private static Object getCompound( ItemStack item ) {
         if ( item == null ) {
             return null;
@@ -536,6 +537,7 @@ public final class NBTEditor {
      * @throws SecurityException 
      * @throws NoSuchFieldException 
      */
+    @SuppressWarnings( "deprecation" )
     private static NBTCompound getItemNBTTag( ItemStack item, Object... keys ) {
         if ( item == null ) {
             return null;
@@ -583,6 +585,7 @@ public final class NBTEditor {
      * @throws SecurityException 
      * @throws NoSuchFieldException 
      */
+    @SuppressWarnings( "deprecation" )
     private static ItemStack setItemTag( ItemStack item, Object value, Object... keys ) {
         if ( item == null ) {
             return null;
@@ -692,6 +695,7 @@ public final class NBTEditor {
     }
 
     // Gets the NBTTagCompound
+    @SuppressWarnings( "deprecation" )
     private static Object getCompound( Entity entity ) {
         if ( entity == null ) {
             return entity;
@@ -728,6 +732,7 @@ public final class NBTEditor {
      * @return
      * An NBTCompound
      */
+    @SuppressWarnings( "deprecation" )
     private static NBTCompound getEntityNBTTag( Entity entity, Object...keys ) {
         if ( entity == null ) {
             return null;
@@ -747,8 +752,6 @@ public final class NBTEditor {
          
                 getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tag );
             }
-            
-            getMethod( MethodId.getEntityTag ).invoke( NMSEntity, tag );
 
             return getNBTTag( tag, keys );
         } catch ( IllegalAccessException | InstantiationException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException | SecurityException exception ) {
@@ -768,6 +771,7 @@ public final class NBTEditor {
      * @param keys
      * The keys to set, String for NBTCompound, int or null for an NBTTagList
      */
+    @SuppressWarnings( "deprecation" )
     private static void setEntityTag( Entity entity, Object value, Object... keys ) {
         if ( entity == null ) {
             return;
@@ -794,7 +798,13 @@ public final class NBTEditor {
                 setTag( tag, value, keys );
             }
 
-            getMethod( MethodId.setEntityTag ).invoke( NMSEntity, tag );
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R5 ) ) {
+                final Object valueInput = ReflectionTarget.v1_21_R5.getValueInputFromNbtTagCompound( registryAccess(), tag );
+                
+                getMethod( MethodId.setEntityTag ).invoke( NMSEntity, valueInput );
+            } else {
+                getMethod( MethodId.setEntityTag ).invoke( NMSEntity, tag );
+            }
         } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
         }
@@ -821,6 +831,7 @@ public final class NBTEditor {
     }
 
     // Gets the NBTTagCompound
+    @SuppressWarnings( "deprecation" )
     private static Object getCompound( Block block ) {
         try {
             if ( block == null || !getNMSClass( ClassId.CraftBlockState ).isInstance( block.getState() ) ) {
@@ -873,6 +884,7 @@ public final class NBTEditor {
      * @return
      * An NBTCompound
      */
+    @SuppressWarnings( "deprecation" )
     private static NBTCompound getBlockNBTTag( Block block, Object... keys ) {
         try {
             if ( block == null || !getNMSClass( ClassId.CraftBlockState ).isInstance( block.getState() ) ) {
@@ -926,6 +938,7 @@ public final class NBTEditor {
      * @param keys
      * The keys to set, String for NBTCompound, int or null for an NBTTagList
      */
+    @SuppressWarnings( "deprecation" )
     private static void setBlockTag( Block block, Object value, Object... keys ) {
         try {
             if ( block == null || !getNMSClass( ClassId.CraftBlockState ).isInstance( block.getState() ) ) {
@@ -1386,6 +1399,7 @@ public final class NBTEditor {
      * @return
      * A new NBTCompound that contains a NBTTagCompound object.
      */
+    @SuppressWarnings( "deprecation" )
     public static NBTCompound getEmptyNBTCompound() {
         try {
             return new NBTCompound( getNMSClass( ClassId.NBTTagCompound ).newInstance() );
@@ -1395,6 +1409,7 @@ public final class NBTEditor {
         }
     }
 
+    @SuppressWarnings( "deprecation" )
     private static void setTag( Object tag, Object value, Object... keys ) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Object wrappedValue;
         // Get the real value of what we want to set here
