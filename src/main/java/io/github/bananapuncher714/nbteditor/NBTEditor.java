@@ -197,8 +197,13 @@ public final class NBTEditor {
 
         try {
             if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R4 ) ) {
-                NBTListData = getNMSClass( ClassId.NBTTagList ).getDeclaredField( "v" );
-                NBTCompoundMap = getNMSClass( ClassId.NBTTagCompound ).getDeclaredField( "x" );
+                try {
+                    NBTListData    = getNMSClass(ClassId.NBTTagList).getDeclaredField("list");
+                    NBTCompoundMap = getNMSClass(ClassId.NBTTagCompound).getDeclaredField("tags");
+                } catch (NoSuchFieldException ex) {
+                    NBTListData    = getNMSClass(ClassId.NBTTagList).getDeclaredField("v");
+                    NBTCompoundMap = getNMSClass(ClassId.NBTTagCompound).getDeclaredField("x");
+                }
             } else if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_17 ) ) {
                 NBTListData = getNMSClass( ClassId.NBTTagList ).getDeclaredField( "c" );
                 NBTCompoundMap = getNMSClass( ClassId.NBTTagCompound ).getDeclaredField( "x" );
@@ -1765,6 +1770,8 @@ public final class NBTEditor {
         v1_21_6( false ),
         v1_21_7( false ),
         v1_21_8( false ),
+        v1_21_9( false ),
+        v1_21_10( false ),
         v1_22;
 
         private boolean implemented = true;
