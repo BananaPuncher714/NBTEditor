@@ -1,6 +1,3 @@
-[submodule "spigot-docker-build-tools"]
-	path = .git-submodules/spigot-docker-build-tools
-	url = git@git.048596.world:banana/spigot-docker-build-tools.git
 [submodule ".git-submodules/spigot-docker-build-tools"]
 	path = .git-submodules/spigot-docker-build-tools
 	url = git@git.048596.world:banana/spigot-docker-build-tools.git
