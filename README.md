@@ -9,7 +9,7 @@ Include this in your dependencies:
 <dependency>
     <groupId>io.github.bananapuncher714</groupId>
     <artifactId>nbteditor</artifactId>
-    <version>7.19.10</version>
+    <version>7.19.10.1</version>
 </dependency>
 ```
 

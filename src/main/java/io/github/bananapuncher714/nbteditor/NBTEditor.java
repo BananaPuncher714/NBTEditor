@@ -36,7 +36,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.10
+ * @version 7.19.10.1
  * @author BananaPuncher714
  */
 public final class NBTEditor {
