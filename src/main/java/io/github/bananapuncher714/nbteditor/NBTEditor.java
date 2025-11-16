@@ -36,7 +36,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.10.1
+ * @version 7.19.11
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -44,7 +44,7 @@ public final class NBTEditor {
     
     private static final Map< ClassId, Class< ? > > classCache;
     private static final Map< MethodId, Method > methodCache;
-    private static final Map< ClassId, Constructor< ? > > constructorCache;
+    private static final Map< ConstructorKey, Constructor< ? > > constructorCache;
     private static final Map< Class< ? >, Constructor< ? > > NBTConstructors;
     private static final Map< Class< ? >, Class< ? > > NBTClasses;
     private static final Map< Class< ? >, Field > NBTTagFieldCache;
@@ -77,7 +77,7 @@ public final class NBTEditor {
 
         classCache = new HashMap< ClassId, Class< ? > >();
         methodCache = new HashMap< MethodId, Method >();
-        constructorCache = new HashMap< ClassId, Constructor< ? > >();
+        constructorCache = new HashMap< ConstructorKey, Constructor< ? > >();
         
         reflectionTargets = new TreeSet< ReflectionTarget >();
         reflectionTargets.addAll( Arrays.asList(
@@ -99,7 +99,8 @@ public final class NBTEditor {
                 new ReflectionTarget.v1_20_R4().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_21_R1().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_21_R4().setClassFetcher( NBTEditor::getNMSClass ),
-                new ReflectionTarget.v1_21_R5().setClassFetcher( NBTEditor::getNMSClass )
+                new ReflectionTarget.v1_21_R5().setClassFetcher( NBTEditor::getNMSClass ),
+                new ReflectionTarget.v1_21_R6().setClassFetcher( NBTEditor::getNMSClass )
         ) );
         
         NBTClasses = new HashMap< Class< ? >, Class< ? > >();
@@ -274,17 +275,25 @@ public final class NBTEditor {
     }
 
     private static Constructor< ? > getConstructor( ClassId id ) {
-        if ( constructorCache.containsKey( id ) ) {
-            return constructorCache.get( id );
+        return getConstructor( new ConstructorKey( id ) );
+    }
+
+    private static Constructor< ? > getConstructor( ConstructorId id ) {
+        return getConstructor( new ConstructorKey( id ) );
+    }
+
+    private static Constructor< ? > getConstructor( ConstructorKey key ) {
+        if ( constructorCache.containsKey( key ) ) {
+            return constructorCache.get( key );
         }
         
         for ( ReflectionTarget target : reflectionTargets ) {
             // Only check targets that are of the correct version
             if ( target.getVersion().lessThanOrEqualTo( LOCAL_VERSION ) ) {
                 try {
-                    Constructor< ? > cons = target.fetchConstructor( id );
+                    Constructor< ? > cons = target.fetchConstructor( key );
                     if ( cons != null ) {
-                        constructorCache.put( id, cons );
+                        constructorCache.put( key, cons );
                     
                         return cons;
                     }
@@ -388,21 +397,41 @@ public final class NBTEditor {
         }
         ItemMeta headMeta = head.getItemMeta();
         Object profile = null;
-        try {
-            // Use a non-random UUID so heads will stack; in this case, Notch.
-            profile = getConstructor( ClassId.GameProfile ).newInstance( UUID.fromString( "069a79f4-44e9-4726-a5be-fca90e38aaf5" ), "Notch" );
-            Object propertyMap = getMethod( MethodId.getProperties ).invoke( profile );
-            Object textureProperty = getConstructor( ClassId.Property ).newInstance( "textures", new String( Base64.getEncoder().encode( String.format( "{textures:{SKIN:{\"url\":\"%s\"}}}", skinURL ).getBytes() ) ) );
-            getMethod( MethodId.putProperty ).invoke( propertyMap, "textures", textureProperty );
-        } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e1 ) {
-            e1.printStackTrace();
+        if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R6 ) ) {
+            try {
+                // 1.21.10 switches to using records for GameProfiles, and the property map is immutable,
+                // so we need to construct a new property map first before creating the game profile
+                final Object multimap = getMethod( MethodId.createHashMultimap ).invoke( null );
+                final Object textureProperty = getConstructor( ClassId.Property ).newInstance( "textures", new String( Base64.getEncoder().encode( String.format( "{textures:{SKIN:{\"url\":\"%s\"}}}", skinURL ).getBytes() ) ) );
+                getMethod( MethodId.multimapPut ).invoke( multimap, "textures", textureProperty );
+                final Object propertyMap = getConstructor( ClassId.PropertyMap ).newInstance( multimap );
+                profile = getConstructor( ConstructorId.GameProfileWithPropertyMap ).newInstance( UUID.fromString( "069a79f4-44e9-4726-a5be-fca90e38aaf5" ), "Notch", propertyMap );
+            } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e1 ) {
+                e1.printStackTrace();
+            }
+        } else {
+            try {
+                // Use a non-random UUID so heads will stack; in this case, Notch.
+                profile = getConstructor( ClassId.GameProfile ).newInstance( UUID.fromString( "069a79f4-44e9-4726-a5be-fca90e38aaf5" ), "Notch" );
+                Object propertyMap = getMethod( MethodId.getProperties ).invoke( profile );
+                Object textureProperty = getConstructor( ClassId.Property ).newInstance( "textures", new String( Base64.getEncoder().encode( String.format( "{textures:{SKIN:{\"url\":\"%s\"}}}", skinURL ).getBytes() ) ) );
+                getMethod( MethodId.putProperty ).invoke( propertyMap, "textures", textureProperty );
+            } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e1 ) {
+                e1.printStackTrace();
+            }
         }
 
         final Method setSkullResolvableProfile = getMethod( MethodId.setCraftMetaSkullResolvableProfile );
         Method setSkullProfile = getMethod( MethodId.setCraftMetaSkullProfile );
         if ( setSkullResolvableProfile != null ) {
             try {
-                setSkullResolvableProfile.invoke( headMeta, getConstructor( ClassId.ResolvableProfile ).newInstance( profile ) );
+                Object resolvableProfile;
+                if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_21_R6 ) ) {
+                    resolvableProfile = getMethod( MethodId.constructResolvableProfileFromGameProfile ).invoke( null, profile );
+                } else {
+                    resolvableProfile = getConstructor( ClassId.ResolvableProfile ).newInstance( profile );
+                }
+                setSkullResolvableProfile.invoke( headMeta, resolvableProfile );
             } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException e ) {
                 e.printStackTrace();
             }
@@ -1770,6 +1799,7 @@ public final class NBTEditor {
         v1_21_6( false ),
         v1_21_7( false ),
         v1_21_8( false ),
+        v1_21_R6,
         v1_21_9( false ),
         v1_21_10( false ),
         v1_22;
@@ -1860,7 +1890,9 @@ public final class NBTEditor {
         ValueInput,
         ValueOutput,
         ProblemReporter,
-        ValueInputContextHelper
+        ValueInputContextHelper,
+        Multimap,
+        HashMultimap
     }
     
     private enum MethodId {
@@ -1933,7 +1965,64 @@ public final class NBTEditor {
         encoderEncodeStart,
         getOrThrow,
         createTagValueOutput,
-        convertToNbtTagCompound
+        convertToNbtTagCompound,
+
+        constructResolvableProfileFromGameProfile,
+        createHashMultimap,
+        multimapPut
+    }
+
+    private enum ConstructorId {
+        GameProfileWithPropertyMap( ClassId.GameProfile );
+
+        final ClassId id;
+
+        private ConstructorId( ClassId id ) {
+            this.id = id;
+        }
+    }
+
+    private static class ConstructorKey {
+        final ClassId clazz;
+        final ConstructorId id;
+
+        private ConstructorKey( ClassId clazz ) {
+            this.clazz = clazz;
+            this.id = null;
+        }
+
+        private ConstructorKey( ConstructorId id ) {
+            this.clazz = id.id;
+            this.id = id;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((clazz == null) ? 0 : clazz.hashCode());
+            result = prime * result + ((id == null) ? 0 : id.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null) return false;
+            if (!(obj instanceof ConstructorKey)) return false;
+            ConstructorKey other = (ConstructorKey) obj;
+            if (clazz == null) {
+                if (other.clazz != null)
+                    return false;
+            } else if (!clazz.equals(other.clazz))
+                return false;
+            if (id == null) {
+                if (other.id != null)
+                    return false;
+            } else if (!id.equals(other.id))
+                return false;
+            return true;
+        }
     }
     
     private static abstract class ReflectionTarget implements Comparable< ReflectionTarget > {
@@ -1944,7 +2033,7 @@ public final class NBTEditor {
         
         private final Map< ClassId, String > classTargets = new HashMap< ClassId, String >();
         private final Map< MethodId, ConstructorTarget > methodTargets = new HashMap< MethodId, ConstructorTarget >();
-        private final Map< ClassId, ConstructorTarget > constructorTargets = new HashMap< ClassId, ConstructorTarget >();
+        private final Map< ConstructorKey, ConstructorTarget > constructorTargets = new HashMap< ConstructorKey, ConstructorTarget >();
         
         protected ReflectionTarget( MinecraftVersion version ) {
             this.version = version;
@@ -1977,7 +2066,11 @@ public final class NBTEditor {
         }
         
         protected final void addConstructor( ClassId clazz, Object... params ) {
-            constructorTargets.put( clazz, new ConstructorTarget( clazz, params ) );
+            constructorTargets.put( new ConstructorKey( clazz ), new ConstructorTarget( clazz, params ) );
+        }
+
+        protected final void addConstructor( ConstructorId id, Object... params ) {
+            constructorTargets.put( new ConstructorKey( id ), new ConstructorTarget( id.id, params ) );
         }
         
         protected final Class< ? > fetchClass( final ClassId name ) throws ClassNotFoundException {
@@ -2025,7 +2118,15 @@ public final class NBTEditor {
         }
         
         protected final Constructor< ? > fetchConstructor( ClassId name ) throws NoSuchMethodException, SecurityException, ClassNotFoundException {
-            final ConstructorTarget target = constructorTargets.get( name );
+            return fetchConstructor( new ConstructorKey( name ) );
+        }
+
+        protected final Constructor< ? > fetchConstructor( ConstructorId id ) throws NoSuchMethodException, SecurityException, ClassNotFoundException {
+            return fetchConstructor( new ConstructorKey( id ) );
+        }
+
+        protected final Constructor< ? > fetchConstructor( ConstructorKey key ) throws NoSuchMethodException, SecurityException, ClassNotFoundException {
+            final ConstructorTarget target = constructorTargets.get( key );
             final Constructor< ? > constructor = target != null ? findClass( target.clazz ).getDeclaredConstructor( convert( target.params ) ) : null;
             if ( constructor != null ) {
                 constructor.setAccessible( true );
@@ -2481,6 +2582,26 @@ public final class NBTEditor {
             
             protected static Object save( final Object item, final Object registryAccess ) throws IllegalAccessException, InvocationTargetException, IllegalArgumentException, NoSuchFieldException, SecurityException {
                 return getMethod( MethodId.getOrThrow ).invoke( getMethod( MethodId.encoderEncodeStart ).invoke( getItemStackCodec(), getMethod( MethodId.createSerializationContext ).invoke( registryAccess, getNbtOps() ), item ) );
+            }
+        }
+
+        private static class v1_21_R6 extends ReflectionTarget {
+            protected v1_21_R6() {
+                super( MinecraftVersion.v1_21_R6 );
+
+                addClass( ClassId.Multimap, "com.google.common.collect.Multimap" );
+                addClass( ClassId.HashMultimap, "com.google.common.collect.HashMultimap" );
+
+                addMethod( MethodId.getProperties, ClassId.GameProfile, "properties" );
+                addMethod( MethodId.multimapPut, ClassId.Multimap, "put", Object.class, Object.class );
+                addMethod( MethodId.createHashMultimap, ClassId.HashMultimap, "create" );
+                addMethod( MethodId.constructResolvableProfileFromGameProfile, ClassId.ResolvableProfile, "a", ClassId.GameProfile );
+
+                addMethod( MethodId.getResolvableProfileGameProfile, ClassId.ResolvableProfile, "b" );
+
+                addConstructor( ClassId.GameProfile, UUID.class, String.class );
+                addConstructor( ClassId.PropertyMap, ClassId.Multimap );
+                addConstructor( ConstructorId.GameProfileWithPropertyMap, UUID.class, String.class, ClassId.PropertyMap );
             }
         }
     }

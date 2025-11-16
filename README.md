@@ -9,7 +9,7 @@ Include this in your dependencies:
 <dependency>
     <groupId>io.github.bananapuncher714</groupId>
     <artifactId>nbteditor</artifactId>
-    <version>7.19.10.1</version>
+    <version>7.19.11</version>
 </dependency>
 ```
 
@@ -29,3 +29,8 @@ Alternatively, if you choose, you can use Github Packages instead. Make sure to 
     <url>https://maven.pkg.github.com/BananaPuncher714/NBTEditor</url>
 </repository>
 ```
+
+## Building
+If you would like to install and build locally, you can clone and run the `install.sh` script. You will need to do several things beforehand:
+- Have docker permissions
+- Export the environment variable M2_DIRECTORY to point at your maven m2 location(such as `~/.m2`)
