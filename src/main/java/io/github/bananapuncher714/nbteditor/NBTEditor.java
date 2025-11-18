@@ -36,7 +36,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.19.11
+ * @version 7.20.1
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -2602,6 +2602,8 @@ public final class NBTEditor {
                 addConstructor( ClassId.GameProfile, UUID.class, String.class );
                 addConstructor( ClassId.PropertyMap, ClassId.Multimap );
                 addConstructor( ConstructorId.GameProfileWithPropertyMap, UUID.class, String.class, ClassId.PropertyMap );
+
+                addMethod( MethodId.setEntityTag, ClassId.Entity, "d", ClassId.ValueInput );
             }
         }
     }
