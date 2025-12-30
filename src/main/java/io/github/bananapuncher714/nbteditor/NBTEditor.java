@@ -36,7 +36,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 7.20.1
+ * @version 7.20.2
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -1802,6 +1802,8 @@ public final class NBTEditor {
         v1_21_R6,
         v1_21_9( false ),
         v1_21_10( false ),
+        v1_21_R7,
+        v1_21_11( false ),
         v1_22;
 
         private boolean implemented = true;
