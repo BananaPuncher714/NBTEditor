@@ -597,6 +597,12 @@ public final class NBTEditor {
                 }
             }
 
+            if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) && !BUKKIT_VERSION.startsWith( "1.20.4" ) && !BUKKIT_VERSION.startsWith( "1.20.5" ) ) {
+                if ( keys.length > 0 && keys[ 0 ] != Type.ITEMSTACK_COMPONENTS ) {
+                    tag = getMethod( MethodId.compoundGet ).invoke( tag, "components" );
+                }
+            }
+
             return getNBTTag( tag, keys );
         } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException | NoSuchFieldException | SecurityException exception ) {
             exception.printStackTrace();
@@ -1471,25 +1477,30 @@ public final class NBTEditor {
             wrappedValue = Type.DELETE;
         }
 
-        Object compound = tag;
-        for ( int index = 0; index < keys.length - 1; index++ ) {
-            Object key = keys[ index ];
-            Object prevCompound = compound;
-            if ( key == Type.CUSTOM_DATA ) {
+        final List< Object > remappedKeys = new ArrayList< Object >();
+        for ( Object key : keys ) {
+             if ( key == Type.CUSTOM_DATA ) {
                 // Only use the custom data key if the version is 1.20.5 or greater
                 if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
-                    key = "minecraft:custom_data";
+                    remappedKeys.add( "minecraft:custom_data" );
                 } else {
                     continue;
                 }
             } else if ( key == Type.ITEMSTACK_COMPONENTS ) {
                 if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_20_R4 ) ) {
-                    key = "components";
+                    remappedKeys.add( "components" );
                 } else {
-                    key = "tag";
+                    remappedKeys.add( "tag" );
                 }
+            } else {
+                remappedKeys.add( key );
             }
-            
+        }
+
+        Object compound = tag;
+        for ( int index = 0; index < remappedKeys.size() - 1; index++ ) {
+            Object key = remappedKeys.get( index );
+            Object prevCompound = compound;
             if ( key instanceof Integer ) {
                 int keyIndex = ( int ) key;
                 List< ? > tagList = ( List< ? > ) NBTListData.get( compound );
@@ -1502,7 +1513,8 @@ public final class NBTEditor {
                 compound = getMethod( MethodId.compoundGet ).invoke( compound, ( String ) key );
             }
             if ( compound == null || key == null || key == Type.NEW_ELEMENT ) {
-                if ( keys[ index + 1 ] == null || keys[ index + 1 ] instanceof Integer || keys[ index + 1 ] == Type.NEW_ELEMENT ) {
+                final Object nextKey = remappedKeys.get( index + 1 );
+                if ( nextKey == null || nextKey instanceof Integer || nextKey == Type.NEW_ELEMENT ) {
                     compound = getNMSClass( ClassId.NBTTagList ).newInstance();
                 } else {
                     compound = getNMSClass( ClassId.NBTTagCompound ).newInstance();
@@ -1518,8 +1530,8 @@ public final class NBTEditor {
                 }
             }
         }
-        if ( keys.length > 0 ) {
-            Object lastKey = keys[ keys.length - 1 ];
+        if ( !remappedKeys.isEmpty() ) {
+            Object lastKey = remappedKeys.get( remappedKeys.size() - 1 );
             if ( lastKey == null || lastKey == Type.NEW_ELEMENT ) {
                 if ( LOCAL_VERSION.greaterThanOrEqualTo( MinecraftVersion.v1_14 ) ) {
                     getMethod( MethodId.listAdd ).invoke( compound, getMethod( MethodId.listSize ).invoke( compound ), wrappedValue );
