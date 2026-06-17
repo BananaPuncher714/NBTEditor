@@ -31,12 +31,12 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 /**
  * Sets/Gets NBT tags from ItemStacks 
- * Supports 1.8-1.21, 26.1
+ * Supports 1.8-1.21, 26.2
  * 
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 8.0.0
+ * @version 8.0.1
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -1916,7 +1916,8 @@ public final class NBTEditor {
         v1_22,
         v26_1,
         v26_1_1(false),
-        v26_1_2(false);
+        v26_1_2(false),
+        v26_2(false);
 
         private boolean implemented = true;
         
