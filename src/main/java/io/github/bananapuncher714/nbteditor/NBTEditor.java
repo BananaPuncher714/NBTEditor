@@ -31,12 +31,12 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 /**
  * Sets/Gets NBT tags from ItemStacks 
- * Supports 1.8-1.21, 26.2
+ * Supports 1.8-1.21, 26.2-26.3
  * 
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 8.0.1
+ * @version 8.0.2
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -62,6 +62,7 @@ public final class NBTEditor {
 
     private static final String VERSION;
     private static final MinecraftVersion LOCAL_VERSION;
+    private static final MinecraftVersion STATED_VERSION;
     private static final String BUKKIT_VERSION;
     
     public static final Type COMPOUND = Type.COMPOUND;
@@ -82,6 +83,7 @@ public final class NBTEditor {
         
         VERSION = detectedVersion;
         LOCAL_VERSION = MinecraftVersion.get( VERSION );
+        STATED_VERSION = MinecraftVersion.getRaw( VERSION );
         BUKKIT_VERSION = bukkitVersion;
 
         classCache = new HashMap< ClassId, Class< ? > >();
@@ -416,8 +418,18 @@ public final class NBTEditor {
         return VERSION;
     }
     
+    /**
+     * Returns the current minecraft versioning used by spigot. For example, 26_3_R3
+     */
     public static MinecraftVersion getMinecraftVersion() {
         return LOCAL_VERSION;
+    }
+
+    /**
+     * Returns the current minecraft version
+     */
+    public static MinecraftVersion getRawMinecraftVersion() {
+        return STATED_VERSION;
     }
 
     /**
@@ -1915,9 +1927,11 @@ public final class NBTEditor {
         v1_21_11( false ),
         v1_22,
         v26_1,
-        v26_1_1(false),
-        v26_1_2(false),
-        v26_2(false);
+        v26_1_1( false ),
+        v26_1_2( false ),
+        v26_2( false ),
+        v26_3( false ),
+        LATEST( false );
 
         private boolean implemented = true;
         
@@ -1946,6 +1960,21 @@ public final class NBTEditor {
                 
                 if ( v.contains( k.name().substring( 1 ) ) ) {
                     return getLastImplemented( k );
+                }
+            }
+            
+            // Return the latest version if none was found
+            return MinecraftVersion.values()[ MinecraftVersion.values().length - 1 ];
+        }
+
+        public static MinecraftVersion getRaw( String v ) {
+            v = v.replace( '.', '_' );
+            
+            for ( int i = MinecraftVersion.values().length; i > 0; --i ) {
+                MinecraftVersion k = MinecraftVersion.values()[ i - 1 ];
+                
+                if ( v.contains( k.name().substring( 1 ) ) ) {
+                    return k;
                 }
             }
             
