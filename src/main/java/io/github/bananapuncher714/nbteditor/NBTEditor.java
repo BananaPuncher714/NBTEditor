@@ -36,7 +36,7 @@ import org.bukkit.inventory.meta.SkullMeta;
  * Github: https://github.com/BananaPuncher714/NBTEditor
  * Spigot: https://www.spigotmc.org/threads/269621/
  * 
- * @version 8.0.2
+ * @version 8.0.3
  * @author BananaPuncher714
  */
 public final class NBTEditor {
@@ -112,7 +112,8 @@ public final class NBTEditor {
                 new ReflectionTarget.v1_21_R4().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_21_R5().setClassFetcher( NBTEditor::getNMSClass ),
                 new ReflectionTarget.v1_21_R6().setClassFetcher( NBTEditor::getNMSClass ),
-                new ReflectionTarget.v26_1().setClassFetcher( NBTEditor::getNMSClass )
+                new ReflectionTarget.v26_1().setClassFetcher( NBTEditor::getNMSClass ),
+                new ReflectionTarget.v26_3().setClassFetcher( NBTEditor::getNMSClass )
         ) );
         
         NBTClasses = new HashMap< Class< ? >, Class< ? > >();
@@ -1930,7 +1931,7 @@ public final class NBTEditor {
         v26_1_1( false ),
         v26_1_2( false ),
         v26_2( false ),
-        v26_3( false ),
+        v26_3,
         LATEST( false );
 
         private boolean implemented = true;
@@ -2748,6 +2749,14 @@ public final class NBTEditor {
                 addMethod( MethodId.setEntityTag, ClassId.Entity, "load", ClassId.ValueInput );
                 addMethod( MethodId.getEntityTag, ClassId.Entity, "saveAsPassenger", ClassId.ValueOutput );
                 addMethod( MethodId.getTileEntity, ClassId.World, "getBlockEntity", ClassId.BlockPosition );
+            }
+        }
+
+        private static class v26_3 extends ReflectionTarget {
+            protected v26_3() {
+                super( MinecraftVersion.v26_3 );
+
+                addMethod( MethodId.asBukkitCopy, ClassId.CraftItemStack, "asBukkitMirror", ClassId.ItemStack ).failSilently( true );
             }
         }
     }
